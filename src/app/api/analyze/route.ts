@@ -14,6 +14,10 @@ import {
 
 export const maxDuration = 60;
 
+// Model selection - defaults to Haiku for cost efficiency
+// Set ANTHROPIC_MODEL in .env to override (e.g., "claude-sonnet-4-20250514" for better quality)
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-3-5-20241022";
+
 export async function POST(req: Request) {
   try {
     // Verify authentication
@@ -82,7 +86,7 @@ export async function POST(req: Request) {
 
     // Stream the response from Claude
     const result = streamText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: anthropic(MODEL),
       system: systemPrompt,
       prompt: userPrompt,
     });
