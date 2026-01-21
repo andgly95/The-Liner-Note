@@ -85,13 +85,30 @@ export async function POST(req: Request) {
     }
 
     // Stream the response from Claude
-    const result = streamText({
-      model: anthropic(MODEL),
-      system: systemPrompt,
-      prompt: userPrompt,
-    });
+    console.log("Using model:", MODEL);
+    console.log("System prompt length:", systemPrompt.length);
+    console.log("User prompt length:", userPrompt.length);
 
-    return result.toDataStreamResponse();
+    try {
+      const result = streamText({
+        model: anthropic(MODEL),
+        system: systemPrompt,
+        prompt: userPrompt,
+        onFinish: ({ text, finishReason, usage }) => {
+          console.log("Stream finished:", { finishReason, usage, textLength: text.length });
+        },
+      });
+
+      return result.toDataStreamResponse({
+        getErrorMessage: (error) => {
+          console.error("Stream error:", error);
+          return String(error);
+        },
+      });
+    } catch (streamError) {
+      console.error("Stream creation error:", streamError);
+      throw streamError;
+    }
   } catch (error) {
     console.error("Analysis error:", error);
     return new Response(JSON.stringify({ error: "Analysis failed" }), {

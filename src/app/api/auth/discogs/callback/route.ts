@@ -4,6 +4,7 @@ import { discogsClient } from "@/lib/discogs";
 
 export async function GET(request: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const isSecure = appUrl.startsWith("https://");
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -63,13 +64,17 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log("Setting session cookie, isSecure:", isSecure);
+    console.log("User authenticated:", user.username);
+
     cookieStore.set("discogs_session", sessionData, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecure,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
+    console.log("Cookie set, redirecting to dashboard");
     return NextResponse.redirect(new URL("/dashboard", appUrl));
   } catch (error) {
     console.error("OAuth callback error:", error);

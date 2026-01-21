@@ -6,6 +6,7 @@ export async function GET() {
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const callbackUrl = `${appUrl}/api/auth/discogs/callback`;
+    const isSecure = appUrl.startsWith("https://");
 
     const { requestToken, requestTokenSecret, authorizeUrl } =
       await discogsClient.getRequestToken(callbackUrl);
@@ -14,13 +15,13 @@ export async function GET() {
     const cookieStore = await cookies();
     cookieStore.set("discogs_request_token", requestToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecure,
       sameSite: "lax",
       maxAge: 60 * 10, // 10 minutes
     });
     cookieStore.set("discogs_request_token_secret", requestTokenSecret, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isSecure,
       sameSite: "lax",
       maxAge: 60 * 10,
     });

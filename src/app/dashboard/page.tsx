@@ -9,10 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Disc3, Flame, Search, Sparkles, LogOut, RefreshCw, Loader2 } from "lucide-react";
+import { Disc3, Flame, Search, Sparkles, Store, LogOut, RefreshCw, Loader2 } from "lucide-react";
 import { RoastDisplay } from "@/components/features/roast-display";
 import { GapFillerDisplay } from "@/components/features/gap-filler-display";
 import { OracleDisplay } from "@/components/features/oracle-display";
+import { RecordShopChat } from "@/components/features/record-shop-chat";
 import type { CompressedCollection } from "@/types/discogs";
 import type { GapFillerResult } from "@/types/analysis";
 
@@ -220,7 +221,7 @@ export default function Dashboard() {
 
         {/* Feature Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="roast" className="flex items-center gap-2">
               <Flame className="w-4 h-4" />
               The Roast
@@ -232,6 +233,10 @@ export default function Dashboard() {
             <TabsTrigger value="oracle" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               The Oracle
+            </TabsTrigger>
+            <TabsTrigger value="shop" className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              Record Shop
             </TabsTrigger>
           </TabsList>
 
@@ -255,6 +260,14 @@ export default function Dashboard() {
               collectionString={collection?.collectionString || ""}
               wantlistString={wantlist?.wantlistString}
               gapFillerResults={gapFillerResults}
+              isReady={!!collection}
+            />
+          </TabsContent>
+
+          <TabsContent value="shop">
+            <RecordShopChat
+              collectionString={collection?.collectionString || ""}
+              wantlistString={wantlist?.wantlistString}
               isReady={!!collection}
             />
           </TabsContent>
