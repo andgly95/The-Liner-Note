@@ -5,6 +5,7 @@ import type {
   DiscogsCollectionItem,
   DiscogsWantlistItem,
   DiscogsOAuthTokens,
+  DiscogsReleaseDetail,
 } from "@/types/discogs";
 import * as crypto from "crypto";
 
@@ -314,6 +315,21 @@ export class DiscogsClient {
     return this.authenticatedRequest<DiscogsWantlistResponse>(
       "GET",
       `/users/${username}/wants?page=${page}&per_page=${perPage}`,
+      tokens
+    );
+  }
+
+  /**
+   * Get full release detail (incl. tracklist).
+   * Used by the Mixtape Architect to ground sequencing in real tracks.
+   */
+  async getReleaseDetail(
+    releaseId: number,
+    tokens: DiscogsOAuthTokens
+  ): Promise<DiscogsReleaseDetail> {
+    return this.authenticatedRequest<DiscogsReleaseDetail>(
+      "GET",
+      `/releases/${releaseId}`,
       tokens
     );
   }

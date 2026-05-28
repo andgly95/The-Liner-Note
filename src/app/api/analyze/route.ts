@@ -1,119 +1,120 @@
-import { anthropic } from "@ai-sdk/anthropic";
-import { streamText } from "ai";
+import { anthropic } from "@/lib/anthropic-client";
+import { streamObject } from "ai";
+import type { z } from "zod";
 import { cookies } from "next/headers";
-import type { DiscogsSession } from "@/types/discogs";
 import type { AnalysisType } from "@/types/analysis";
 import {
   ROAST_SYSTEM_PROMPT,
   GAP_FILLER_SYSTEM_PROMPT,
   ORACLE_SYSTEM_PROMPT,
+  MOOD_SYSTEM_PROMPT,
+  OBSCURENESS_SYSTEM_PROMPT,
   buildRoastPrompt,
   buildGapFillerPrompt,
   buildOraclePrompt,
+  buildMoodPrompt,
+  buildObscurenessPrompt,
 } from "@/lib/prompts";
+import {
+  roastResultSchema,
+  gapFillerResultSchema,
+  oracleResultSchema,
+  moodResultSchema,
+  obscurenessResultSchema,
+} from "@/lib/analysis-schemas";
 
 export const maxDuration = 60;
 
-// Model selection - defaults to Haiku for cost efficiency
-// Set ANTHROPIC_MODEL in .env to override (e.g., "claude-sonnet-4-20250514" for better quality)
+// Defaults to Haiku for cost. Override with ANTHROPIC_MODEL.
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-3-5-20241022";
+
+const ephemeralCache = {
+  providerOptions: {
+    anthropic: { cacheControl: { type: "ephemeral" as const } },
+  },
+};
 
 export async function POST(req: Request) {
   try {
-    // Verify authentication
     const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get("discogs_session")?.value;
-
-    if (!sessionCookie) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+    if (!cookieStore.has("discogs_session")) {
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
     }
 
-    const _session: DiscogsSession = JSON.parse(sessionCookie);
-
-    // Parse request body
-    const body = await req.json();
     const {
       type,
       collection,
       wantlist,
       gapFillerResults,
+      mood,
+      count,
     }: {
       type: AnalysisType;
       collection: string;
       wantlist?: string;
       gapFillerResults?: string;
-    } = body;
+      mood?: string;
+      count?: number;
+    } = await req.json();
 
     if (!type || !collection) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return Response.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Select system prompt and build user prompt based on analysis type
     let systemPrompt: string;
     let userPrompt: string;
+    let schema: z.ZodSchema;
 
     switch (type) {
       case "roast":
         systemPrompt = ROAST_SYSTEM_PROMPT;
         userPrompt = buildRoastPrompt(collection);
+        schema = roastResultSchema;
         break;
       case "gap_filler":
         systemPrompt = GAP_FILLER_SYSTEM_PROMPT;
         userPrompt = buildGapFillerPrompt(collection);
+        schema = gapFillerResultSchema;
         break;
       case "oracle":
         systemPrompt = ORACLE_SYSTEM_PROMPT;
         userPrompt = buildOraclePrompt(collection, wantlist, gapFillerResults);
+        schema = oracleResultSchema;
+        break;
+      case "mood": {
+        if (!mood || typeof mood !== "string" || !mood.trim()) {
+          return Response.json({ error: "Missing 'mood' field" }, { status: 400 });
+        }
+        const pickCount = Math.min(10, Math.max(1, Math.round(typeof count === "number" ? count : 3)));
+        systemPrompt = MOOD_SYSTEM_PROMPT;
+        userPrompt = buildMoodPrompt(collection, mood.trim(), pickCount);
+        schema = moodResultSchema;
+        break;
+      }
+      case "obscureness":
+        systemPrompt = OBSCURENESS_SYSTEM_PROMPT;
+        userPrompt = buildObscurenessPrompt(collection);
+        schema = obscurenessResultSchema;
         break;
       default:
-        return new Response(
-          JSON.stringify({ error: "Invalid analysis type" }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+        return Response.json({ error: "Invalid analysis type" }, { status: 400 });
     }
 
-    // Stream the response from Claude
-    console.log("Using model:", MODEL);
-    console.log("System prompt length:", systemPrompt.length);
-    console.log("User prompt length:", userPrompt.length);
+    // Two cache breakpoints:
+    //   1) static system prompt — reusable across all users for this analysis type
+    //   2) collection (in user message) — reusable for this user across re-analyses
+    const result = streamObject({
+      model: anthropic(MODEL),
+      schema,
+      messages: [
+        { role: "system", content: systemPrompt, ...ephemeralCache },
+        { role: "user", content: userPrompt, ...ephemeralCache },
+      ],
+    });
 
-    try {
-      const result = streamText({
-        model: anthropic(MODEL),
-        system: systemPrompt,
-        prompt: userPrompt,
-        onFinish: ({ text, finishReason, usage }) => {
-          console.log("Stream finished:", { finishReason, usage, textLength: text.length });
-        },
-      });
-
-      return result.toDataStreamResponse({
-        getErrorMessage: (error) => {
-          console.error("Stream error:", error);
-          return String(error);
-        },
-      });
-    } catch (streamError) {
-      console.error("Stream creation error:", streamError);
-      throw streamError;
-    }
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("Analysis error:", error);
-    return new Response(JSON.stringify({ error: "Analysis failed" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return Response.json({ error: "Analysis failed" }, { status: 500 });
   }
 }

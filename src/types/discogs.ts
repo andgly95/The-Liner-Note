@@ -89,6 +89,23 @@ export interface DiscogsWantlistResponse {
   wants: DiscogsWantlistItem[];
 }
 
+export interface DiscogsTrack {
+  position: string;
+  title: string;
+  duration?: string;
+  type_?: string;
+}
+
+export interface DiscogsReleaseDetail {
+  id: number;
+  title: string;
+  artists: DiscogsArtist[];
+  year?: number;
+  tracklist: DiscogsTrack[];
+  genres?: string[];
+  styles?: string[];
+}
+
 export interface DiscogsOAuthTokens {
   accessToken: string;
   accessTokenSecret: string;

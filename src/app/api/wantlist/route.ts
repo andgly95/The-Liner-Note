@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { discogsClient } from "@/lib/discogs";
 import {
@@ -7,7 +7,7 @@ import {
 } from "@/lib/optimize-collection";
 import type { DiscogsSession } from "@/types/discogs";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("discogs_session")?.value;
@@ -19,18 +19,24 @@ export async function GET() {
     const session: DiscogsSession = JSON.parse(sessionCookie);
     const { user, tokens } = session;
 
-    // Fetch full wantlist
+    // Allow fetching another user's public wantlist via query param
+    const requestedUsername = request.nextUrl.searchParams.get("username");
+    const targetUsername = requestedUsername || user.username;
+    const isOwnWantlist = targetUsername === user.username;
+
+    // Fetch full wantlist (uses authenticated user's tokens to access any public wantlist)
     const wantlistItems = await discogsClient.getFullWantlist(
-      user.username,
+      targetUsername,
       tokens
     );
 
     // Optimize for LLM consumption
-    const optimized = optimizeWantlistForLLM(wantlistItems, user.username);
+    const optimized = optimizeWantlistForLLM(wantlistItems, targetUsername);
     const wantlistString = wantlistToString(optimized);
 
     return NextResponse.json({
-      username: user.username,
+      username: targetUsername,
+      isOwnWantlist,
       totalItems: wantlistItems.length,
       optimized,
       wantlistString,

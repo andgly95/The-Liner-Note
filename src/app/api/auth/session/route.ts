@@ -5,10 +5,7 @@ import type { DiscogsSession } from "@/types/discogs";
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const allCookies = cookieStore.getAll();
-    console.log("All cookies:", allCookies.map(c => c.name));
     const sessionCookie = cookieStore.get("discogs_session")?.value;
-    console.log("Session cookie exists:", !!sessionCookie);
 
     if (!sessionCookie) {
       return NextResponse.json({ authenticated: false });

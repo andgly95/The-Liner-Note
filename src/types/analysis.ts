@@ -1,59 +1,24 @@
-// Types for LLM analysis results
+// Result types are derived from Zod schemas in src/lib/analysis-schemas.ts so that
+// the runtime validation and the compile-time types stay in sync automatically.
 
-export interface CollectorArchetype {
-  title: string;
-  description: string;
-}
+export type {
+  CollectorArchetype,
+  RoastResult,
+  CoreArtist,
+  MissingAlbum,
+  GapFillerResult,
+  PredictedPurchase,
+  SuggestedAddition,
+  OracleResult,
+  MoodPick,
+  MoodResult,
+  ObscurenessItem,
+  ObscurenessResult,
+} from "@/lib/analysis-schemas";
 
-export interface RoastResult {
-  roast: string;
-  archetype: CollectorArchetype;
-  tastePatterns: string[];
-  clicheAlbums: string[];
-  valueDistribution: {
-    summary: string;
-    highlights: string[];
-  };
-}
+import type { GapFillerResult } from "@/lib/analysis-schemas";
 
-export interface CoreArtist {
-  name: string;
-  albumCount: number;
-  albums: string[];
-}
-
-export interface MissingAlbum {
-  artist: string;
-  album: string;
-  year: number;
-  reason: string;
-}
-
-export interface GapFillerResult {
-  coreArtists: CoreArtist[];
-  missingAlbums: MissingAlbum[];
-}
-
-export interface PredictedPurchase {
-  artist: string;
-  album: string;
-  reason: string;
-  source: 'wantlist' | 'gap_filler';
-}
-
-export interface SuggestedAddition {
-  artist: string;
-  album: string;
-  reason: string;
-  logic: 'sideman' | 'scene' | 'genre_deep_cut';
-}
-
-export interface OracleResult {
-  likelyPurchases: PredictedPurchase[];
-  suggestedAdds: SuggestedAddition[];
-}
-
-export type AnalysisType = 'roast' | 'gap_filler' | 'oracle';
+export type AnalysisType = "roast" | "gap_filler" | "oracle" | "mood" | "obscureness";
 
 export interface AnalysisRequest {
   type: AnalysisType;
