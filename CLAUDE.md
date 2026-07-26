@@ -48,3 +48,7 @@ Both routes use Vercel AI SDK's `streamText` + `toDataStreamResponse()` and have
 ### Deployment
 
 `Dockerfile` is multi-stage, relies on `output: 'standalone'` in `next.config.js`. `docker-compose.yml` reads env vars from the host shell (no `env_file`). When OAuth callback fails in production, check that `NEXT_PUBLIC_APP_URL` matches what's registered with the Discogs app and is `https://` so the session cookie sets `secure: true`.
+
+### MCP server (`mcp-server/`)
+
+Standalone stdio MCP server exposing the Discogs API as tools (search, releases, artists, labels, collection, wantlist, collection value, price suggestions). It is a **separate npm package** with its own `package.json`/`tsconfig.json`, excluded from the root tsconfig — build it with `cd mcp-server && npm install && npm run build`. It authenticates with a Discogs **personal access token** (`DISCOGS_TOKEN`), not the app's OAuth 1.0a flow; `DISCOGS_CONSUMER_KEY`/`SECRET` work as a fallback for public-data tools. The root `.mcp.json` wires it into Claude Code, expanding `DISCOGS_TOKEN` from the shell. Collection output reuses the same compact `Artist - Title (Year) [Genre]` convention as `optimize-collection.ts`, prefixed with the release id so tool calls can chain. Requests are throttled to ~1/sec to respect Discogs' 60 req/min limit. See `mcp-server/README.md`.
