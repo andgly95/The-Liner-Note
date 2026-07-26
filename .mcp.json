@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "discogs": {
+      "command": "node",
+      "args": ["mcp-server/dist/index.js"],
+      "env": {
+        "DISCOGS_TOKEN": "${DISCOGS_TOKEN}"
+      }
+    }
+  }
+}
