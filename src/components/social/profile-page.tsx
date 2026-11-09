@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AlbumTile, StarsDisplay } from "./bits";
 import { RankedBadge } from "./home-page";
 import { useMe } from "./me";
+import { ThemePicker } from "./theme-picker";
 
 interface Profile {
   user: { handle: string; name: string; avatar_url: string | null; bio: string | null; created_at: number };
@@ -74,6 +75,13 @@ export function ProfilePage({ handle }: { handle: string }) {
             <Button asChild variant="outline" size="sm" className="rounded-full"><a href="/api/auth/discogs"><Disc3 className="w-4 h-4 mr-1.5" /> Link Discogs</a></Button>
           )}
           <Button variant="ghost" size="sm" className="rounded-full" onClick={signOut}><LogOut className="w-4 h-4 mr-1.5" /> Sign out</Button>
+        </section>
+      )}
+
+      {isMe && (
+        <section className="space-y-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Theme</h2>
+          <ThemePicker />
         </section>
       )}
 

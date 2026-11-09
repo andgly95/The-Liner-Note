@@ -63,6 +63,60 @@
   }
 }
 
+/* Hard Bop: the 1950s–60s jazz-label look. Royal blue and white, near-black
+   type, spot colours (red, mustard, teal) and hard edges — the sleeves were
+   cut-and-pasted photo and type, not rounded cards. Scoped on html so it beats
+   next/font's class, which sets --font-display on the same element. */
+html[data-theme="hardbop"] {
+  --background: 40 18% 95%;
+  --foreground: 230 12% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 230 12% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 230 12% 8%;
+  --primary: 219 74% 36%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 12% 89%;
+  --secondary-foreground: 230 12% 10%;
+  --muted: 40 12% 90%;
+  --muted-foreground: 230 6% 36%;
+  --accent: 219 60% 93%;
+  --accent-foreground: 219 74% 26%;
+  --destructive: 4 70% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 40 8% 80%;
+  --input: 40 8% 74%;
+  --ring: 219 74% 36%;
+  --radius: 0.25rem;
+  --chart-1: 219 74% 36%;
+  --chart-2: 4 68% 48%;
+  --chart-3: 42 88% 50%;
+  --chart-4: 178 45% 32%;
+  --font-display: var(--font-condensed);
+}
+/* Headings in capitals, slightly opened up — sleeve lettering, not body text. */
+html[data-theme="hardbop"] .font-display {
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  font-weight: 600;
+}
+/* Hard edges: pills become tabs. Only controls — avatars and the record stay round. */
+html[data-theme="hardbop"] :is(button, a, input, textarea, select).rounded-full,
+html[data-theme="hardbop"] :is(button, a, input).rounded-2xl {
+  border-radius: 0.2rem;
+}
+/* The record gets its label: blue over white, split across the middle. */
+html[data-theme="hardbop"] .vinyl-record { position: relative; }
+html[data-theme="hardbop"] .vinyl-record::after {
+  content: "";
+  position: absolute;
+  inset: 30%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #111 0 9%, transparent 10%),
+    linear-gradient(to bottom, hsl(219 74% 40%) 0 50%, #fff 50% 100%);
+}
+
 @layer base {
   * {
     @apply border-border;

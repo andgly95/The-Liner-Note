@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Fraunces, Inter, Oswald } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 // The display face: headings set like the back of a sleeve.
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-display", axes: ["opsz"] });
+// The Hard Bop theme's display face: tall, condensed, set in capitals — the
+// lettering of 1950s–60s jazz sleeves.
+const oswald = Oswald({ subsets: ["latin"], variable: "--font-condensed" });
+
+// Applied before first paint, so a saved theme never flashes the default one.
+// Per device, in localStorage: a theme is a preference about this screen.
+const THEME_SCRIPT = `try{var t=localStorage.getItem("ln-theme");if(t&&t!=="paper")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -27,7 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`${inter.variable} ${fraunces.variable} ${oswald.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="font-sans antialiased">
         {children}
         <Toaster />
