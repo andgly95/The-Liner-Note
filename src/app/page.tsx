@@ -46,7 +46,7 @@ export default function Home() {
           <div className="flex justify-center mb-6">
             <div className="vinyl-record w-24 h-24 animate-spin-slow" />
           </div>
-          <h1 className="text-5xl font-bold mb-4">The Liner Note</h1>
+          <h1 className="font-display text-5xl font-semibold tracking-tight mb-4">The Liner Note</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             AI-powered analysis of your Discogs collection. Get roasted, find
             gaps in your vinyl obsession, and discover what you should be
@@ -86,8 +86,8 @@ export default function Home() {
 
           <Card className="border-2 hover:border-primary transition-colors">
             <CardHeader>
-              <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-purple-500" />
+              <div className="w-12 h-12 rounded-full bg-chart-2/10 flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-chart-2" />
               </div>
               <CardTitle>The Oracle</CardTitle>
               <CardDescription>

@@ -98,7 +98,7 @@ export function CollectionStats({ collection }: CollectionStatsProps) {
                   label={decade}
                   count={count}
                   total={total}
-                  color="bg-purple-500"
+                  color="bg-chart-2"
                 />
               ))
             )}
@@ -116,7 +116,7 @@ export function CollectionStats({ collection }: CollectionStatsProps) {
                   label={format}
                   count={count}
                   total={total}
-                  color="bg-orange-500"
+                  color="bg-chart-3"
                 />
               ))
             )}

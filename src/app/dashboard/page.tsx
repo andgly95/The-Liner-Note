@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Disc3,
   Flame,
@@ -24,6 +20,8 @@ import {
   Library,
   ListMusic,
   BookOpen,
+  Compass,
+  ChevronDown,
 } from "lucide-react";
 import { RoastDisplay } from "@/components/features/roast-display";
 import { GapFillerDisplay } from "@/components/features/gap-filler-display";
@@ -60,6 +58,25 @@ interface WantlistData {
 }
 
 const ACTIVE_TAB_STORAGE_KEY = "linernote-active-tab";
+
+// On a phone, nine tabs do not fit anywhere you can reach. The five analyses
+// are one destination ("Discover") with their own chip row; the bottom bar has
+// the five places people actually go.
+const DISCOVER = [
+  { value: "roast", label: "Roast", icon: Flame },
+  { value: "gap_filler", label: "Gap Filler", icon: Search },
+  { value: "oracle", label: "Oracle", icon: Sparkles },
+  { value: "mood", label: "Mood", icon: Headphones },
+  { value: "obscureness", label: "Obscure", icon: Telescope },
+] as const;
+const DISCOVER_SET = new Set<string>(DISCOVER.map((d) => d.value));
+const BOTTOM_NAV = [
+  { value: "discover", label: "Discover", icon: Compass },
+  { value: "mixtape", label: "Mixtape", icon: ListMusic },
+  { value: "guides", label: "Guides", icon: BookOpen },
+  { value: "browse", label: "Browse", icon: Library },
+  { value: "shop", label: "Shop", icon: Store },
+] as const;
 const VALID_TABS = new Set([
   "roast",
   "gap_filler",
@@ -94,8 +111,13 @@ export default function Dashboard() {
     }
   }, []);
 
+  const [lastDiscover, setLastDiscover] = useState("roast");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const handleTabChange = useCallback((next: string) => {
     setActiveTab(next);
+    if (DISCOVER_SET.has(next)) setLastDiscover(next);
     try {
       localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, next);
     } catch {
@@ -177,6 +199,25 @@ export default function Dashboard() {
     fetchWantlist(username);
   }, [fetchCollection, fetchWantlist]);
 
+  // From the bottom bar: switch, then put the feature at the top of the screen
+  // rather than leaving you wherever you had scrolled to in the last one.
+  const goTo = useCallback(
+    (next: string) => {
+      handleTabChange(next === "discover" ? lastDiscover : next);
+      requestAnimationFrame(() => {
+        const el = contentRef.current;
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + window.scrollY - 64;
+        if (window.scrollY > top || next === "shop") window.scrollTo({ top, behavior: "smooth" });
+      });
+    },
+    [handleTabChange, lastDiscover]
+  );
+
+  useEffect(() => {
+    if (DISCOVER_SET.has(activeTab)) setLastDiscover(activeTab);
+  }, [activeTab]);
+
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
@@ -192,34 +233,69 @@ export default function Dashboard() {
 
   if (!user) return null;
 
+  const busy = fetchingCollection || fetchingWantlist;
+  const refreshAll = () => {
+    fetchCollection(viewingUser);
+    fetchWantlist(viewingUser);
+  };
+  const recent = collection?.raw?.slice(0, 20) ?? [];
+  const navActive = DISCOVER_SET.has(activeTab) ? "discover" : activeTab;
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="vinyl-record w-8 h-8" />
-            <h1 className="text-xl font-bold">The Liner Note</h1>
+      {/* Header — one line at any width; the account lives behind the avatar */}
+      <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="vinyl-record w-7 h-7 shrink-0" />
+            <h1 className="font-display text-lg sm:text-xl font-semibold tracking-tight whitespace-nowrap">
+              The Liner Note
+            </h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent"
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
               <Avatar className="w-8 h-8">
                 <AvatarImage src={user.avatar_url} alt={user.username} />
                 <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">{user.username}</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+              <span className="hidden sm:inline text-sm font-medium">{user.username}</span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-52 z-50 rounded-lg border bg-popover shadow-lg p-1"
+                >
+                  <div className="px-3 py-2 text-sm">
+                    <div className="text-muted-foreground text-xs">Signed in as</div>
+                    <div className="font-medium truncate">{user.username}</div>
+                  </div>
+                  <button
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Log out
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-4 pb-28 md:pt-8 md:pb-12">
         {/* User Switcher */}
-        <div className="mb-6">
+        <div className="mb-4">
           <UserSwitcher
             currentUser={user.username}
             viewingUser={viewingUser}
@@ -227,86 +303,38 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Collection Stats */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Collection</CardDescription>
-              <CardTitle className="text-3xl flex items-center gap-2">
-                {fetchingCollection ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  collection?.totalItems ?? "—"
-                )}
-                <span className="text-sm font-normal text-muted-foreground">
-                  records
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchCollection(viewingUser)}
-                disabled={fetchingCollection}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${fetchingCollection ? "animate-spin" : ""}`} />
-                Refresh
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Wantlist</CardDescription>
-              <CardTitle className="text-3xl flex items-center gap-2">
-                {fetchingWantlist ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                ) : (
-                  wantlist?.totalItems ?? "—"
-                )}
-                <span className="text-sm font-normal text-muted-foreground">
-                  items
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchWantlist(viewingUser)}
-                disabled={fetchingWantlist}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${fetchingWantlist ? "animate-spin" : ""}`} />
-                Refresh
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Analysis Status</CardDescription>
-              <CardTitle className="text-lg">
-                {collection ? "Ready to analyze" : "Loading collection..."}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!collection && <Progress value={fetchingCollection ? 50 : 0} />}
-              {collection && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Disc3 className="w-4 h-4" />
-                  {collection.optimized.truncated
-                    ? `Optimized to ${collection.optimized.truncatedAt} items`
-                    : "Full collection loaded"}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Summary — the three stat cards were a screen of chrome on a phone */}
+        <div className="flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 mb-4">
+          <div className="flex items-baseline gap-x-4 gap-y-1 flex-wrap min-w-0">
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-2xl font-semibold tabular-nums">
+                {fetchingCollection ? <Loader2 className="w-5 h-5 animate-spin inline" /> : collection?.totalItems?.toLocaleString() ?? "—"}
+              </span>
+              <span className="text-sm text-muted-foreground">records</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-display text-2xl font-semibold tabular-nums">
+                {fetchingWantlist ? <Loader2 className="w-5 h-5 animate-spin inline" /> : wantlist?.totalItems?.toLocaleString() ?? "—"}
+              </span>
+              <span className="text-sm text-muted-foreground">wanted</span>
+            </div>
+            <div className="basis-full text-xs text-muted-foreground flex items-center gap-1.5">
+              <Disc3 className="w-3.5 h-3.5" />
+              {!collection
+                ? fetchingCollection ? "Loading collection…" : "Collection not loaded"
+                : collection.optimized.truncated
+                  ? `Analyses use the top ${collection.optimized.truncatedAt?.toLocaleString()} records`
+                  : "Full collection loaded"}
+            </div>
+          </div>
+          <Button variant="outline" size="icon" onClick={refreshAll} disabled={busy} aria-label="Refresh collection and wantlist">
+            <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+          </Button>
         </div>
 
         {/* Truncation warning — surfaces silent dropping for collections > LLM budget */}
         {collection?.optimized.truncated && collection.optimized.truncatedAt && (
-          <div className="mb-6 px-4 py-3 rounded-md border border-amber-500/40 bg-amber-500/10 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
+          <div className="mb-4 px-4 py-3 rounded-md border border-amber-500/40 bg-amber-500/10 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
             <Disc3 className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
               Your collection is large ({collection.totalItems.toLocaleString()} items). Analyses run on
@@ -316,16 +344,72 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Stats card — derived from already-fetched data, no extra LLM cost */}
+        {/* Recently added — covers up front, as a shelf you swipe along */}
+        {recent.length > 0 && (
+          <section className="mb-4" aria-label="Recently added">
+            <div className="flex items-baseline justify-between mb-2">
+              <h2 className="font-display text-lg font-semibold">
+                {viewingUser ? `${viewingUser}'s latest` : "Recently added"}
+              </h2>
+              {collection && collection.totalItems > recent.length && (
+                <button className="text-sm text-primary font-medium" onClick={() => goTo("browse")}>
+                  Browse all
+                </button>
+              )}
+            </div>
+            <div className="-mx-4 px-4 scroll-px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1">
+              {recent.map((item) => {
+                const basic = item.basic_information;
+                const artist = basic.artists.map((a) => a.name).join(", ");
+                const thumb = basic.cover_image || basic.thumb;
+                return (
+                  <div key={item.instance_id} className="w-28 sm:w-32 shrink-0 snap-start">
+                    <div className="aspect-square relative bg-muted rounded-md overflow-hidden shadow-sm ring-1 ring-black/5">
+                      {thumb ? (
+                        <Image
+                          src={thumb}
+                          alt={`${artist} — ${basic.title}`}
+                          fill
+                          sizes="128px"
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Disc3 className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-1.5 text-xs leading-tight">
+                      <div className="font-medium truncate" title={artist}>{artist}</div>
+                      <div className="text-muted-foreground truncate" title={basic.title}>{basic.title}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Stats — derived from already-fetched data; folded away, since Browse
+            shows the same breakdown for whatever slice you are looking at */}
         {collection && (
-          <div className="mb-8">
-            <CollectionStats collection={collection.optimized} />
-          </div>
+          <details className="group mb-6">
+            <summary className="flex items-center justify-between rounded-xl border bg-card px-4 py-3 cursor-pointer list-none text-sm font-medium [&::-webkit-details-marker]:hidden">
+              Collection breakdown
+              <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="mt-3">
+              <CollectionStats collection={collection.optimized} />
+            </div>
+          </details>
         )}
 
         {/* Feature Tabs */}
+        <div ref={contentRef} className="scroll-mt-16" />
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 mb-8 h-auto gap-1">
+          {/* Desktop: the full row. On a phone it is replaced by the bottom bar. */}
+          <TabsList className="hidden md:grid w-full md:grid-cols-5 lg:grid-cols-9 mb-8 h-auto gap-1">
             <TabsTrigger value="roast" className="flex items-center gap-1.5">
               <Flame className="w-4 h-4 shrink-0" />
               Roast
@@ -352,8 +436,7 @@ export default function Dashboard() {
             </TabsTrigger>
             <TabsTrigger value="obscureness" className="flex items-center gap-1.5">
               <Telescope className="w-4 h-4 shrink-0" />
-              <span className="hidden lg:inline">Obscure</span>
-              <span className="lg:hidden">Obsc.</span>
+              Obscure
             </TabsTrigger>
             <TabsTrigger value="browse" className="flex items-center gap-1.5">
               <Library className="w-4 h-4 shrink-0" />
@@ -365,6 +448,27 @@ export default function Dashboard() {
             </TabsTrigger>
           </TabsList>
 
+          {/* Phone: the five analyses as one swipeable chip row */}
+          {DISCOVER_SET.has(activeTab) && (
+            <div className="md:hidden -mx-4 px-4 scroll-px-4 mb-4 flex gap-2 overflow-x-auto no-scrollbar" role="tablist" aria-label="Discover">
+              {DISCOVER.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  role="tab"
+                  aria-selected={activeTab === value}
+                  onClick={() => handleTabChange(value)}
+                  className={`shrink-0 flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+                    activeTab === value
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <TabsContent value="roast">
             <RoastDisplay
               collectionString={collection?.collectionString || ""}
@@ -438,78 +542,34 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Collection Preview — uses raw items (with cover art) when available */}
-        {collection && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle>
-                {viewingUser ? `${viewingUser}'s Collection` : "Collection Preview"}
-              </CardTitle>
-              <CardDescription>
-                Most recently added — {viewingUser ? `${viewingUser}'s` : "your"} latest 20 records
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-80">
-                {collection.raw && collection.raw.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {collection.raw.slice(0, 20).map((item) => {
-                      const basic = item.basic_information;
-                      const artist = basic.artists.map((a) => a.name).join(", ");
-                      const thumb = basic.thumb || basic.cover_image;
-                      return (
-                        <div key={item.instance_id} className="flex flex-col gap-2">
-                          <div className="aspect-square relative bg-muted rounded-md overflow-hidden">
-                            {thumb ? (
-                              <Image
-                                src={thumb}
-                                alt={`${artist} — ${basic.title}`}
-                                fill
-                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                                className="object-cover"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Disc3 className="w-8 h-8 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-xs">
-                            <div className="font-medium truncate" title={artist}>
-                              {artist}
-                            </div>
-                            <div className="text-muted-foreground truncate" title={basic.title}>
-                              {basic.title}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="space-y-1 font-mono text-sm">
-                    {collection.optimized.releases.slice(0, 20).map((release, i) => (
-                      <div key={i} className="text-muted-foreground">
-                        {release.artist} - {release.album} ({release.year || "????"}) [
-                        {release.genres.slice(0, 2).join("/")}]
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {collection.totalItems > 20 && (
-                  <>
-                    <Separator className="my-3" />
-                    <div className="text-sm text-muted-foreground italic text-center">
-                      …and {(collection.totalItems - 20).toLocaleString()} more
-                    </div>
-                  </>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
       </main>
+
+      {/* Phone: the bottom tab bar — always within reach of a thumb */}
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-safe"
+        aria-label="Sections"
+      >
+        <div className="grid grid-cols-5">
+          {BOTTOM_NAV.map(({ value, label, icon: Icon }) => {
+            const on = navActive === value;
+            return (
+              <button
+                key={value}
+                onClick={() => goTo(value)}
+                aria-current={on ? "page" : undefined}
+                className={`flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-[11px] font-medium transition-colors ${
+                  on ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <span className={`flex items-center justify-center w-12 h-7 rounded-full transition-colors ${on ? "bg-primary/10" : ""}`}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

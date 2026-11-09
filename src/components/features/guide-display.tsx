@@ -258,7 +258,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
           <div className="flex flex-col items-center justify-center py-12 gap-4">
             <div className="vinyl-record w-16 h-16 animate-spin-slow" />
             <p className="text-muted-foreground text-center text-sm max-w-md">
-              Opus 4.7 is reading the tracklist and writing track-by-track. Usually 30-60 seconds.
+              Claude is reading the tracklist and writing track-by-track. Usually 30-60 seconds.
               The result will be saved automatically — you&apos;ll never have to regenerate this one.
             </p>
             <Button variant="outline" size="sm" onClick={stop}>
@@ -435,7 +435,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
                 Pick an album
               </CardTitle>
               <CardDescription>
-                Choose any record from your collection. Opus 4.7 writes the guide once and saves it.
+                Choose any record from your collection. Claude writes the guide once and saves it.
               </CardDescription>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setMode("list")}>
@@ -522,7 +522,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
               Listening Guides
             </CardTitle>
             <CardDescription>
-              Track-by-track guides from Opus 4.7. Generated once, saved forever (in this browser).
+              Track-by-track guides, written by Claude. Generated once, saved forever (in this browser).
             </CardDescription>
           </div>
           <Button onClick={() => setMode("picker")}>

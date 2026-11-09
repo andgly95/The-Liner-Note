@@ -175,7 +175,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
           The Mixtape
         </CardTitle>
         <CardDescription>
-          Sequenced Side A / Side B mixtapes from your collection, with explained transitions. Powered by Opus 4.7.
+          Sequenced Side A / Side B mixtapes from your collection, with explained transitions.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -219,7 +219,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
 
             <div>
               <label className="text-sm font-medium mb-2 block">Or describe your own</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={moodInput}
@@ -231,7 +231,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
                     }
                   }}
                   placeholder="e.g. summer night, drinks on the balcony, slow descent into honest conversation"
-                  className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex-1 min-w-0 px-3 py-2 text-sm rounded-md border border-input bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
                 <Button onClick={() => runMixtape(moodInput)} disabled={!moodInput.trim()}>
                   Build mixtape
@@ -258,7 +258,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
                 "Sequencing..."
               )}
               <br />
-              <span className="text-xs">Narrowing → pulling tracklists → letting Opus sequence.</span>
+              <span className="text-xs">Narrowing → pulling tracklists → letting Claude sequence.</span>
             </p>
             <Button variant="outline" size="sm" onClick={stop}>
               <Square className="w-4 h-4 mr-2" />
@@ -285,7 +285,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
           <ScrollArea className="h-[600px]">
             <div className="space-y-6">
               {/* Header */}
-              <div className="bg-gradient-to-br from-primary/10 via-purple-500/10 to-orange-500/10 rounded-lg p-6">
+              <div className="bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-lg p-6">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
                   For: {lastTheme}
                 </div>
@@ -333,7 +333,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
               {/* Side B */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-7 h-7 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-bold">
+                  <div className="w-7 h-7 rounded-full bg-chart-2 text-white flex items-center justify-center text-xs font-bold">
                     B
                   </div>
                   <h4 className="font-semibold">Side B</h4>
@@ -348,7 +348,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
                         <div className="flex-1 min-w-0">
                           <div className="font-medium">{t.artist}</div>
                           <div className="text-sm">
-                            <span className="text-purple-600 dark:text-purple-400">
+                            <span className="text-chart-2 dark:text-chart-2">
                               &ldquo;{t.track}&rdquo;
                             </span>
                             <span className="text-muted-foreground"> · {t.album}</span>

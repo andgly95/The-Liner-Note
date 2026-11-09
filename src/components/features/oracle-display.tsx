@@ -61,7 +61,7 @@ export function OracleDisplay({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-purple-500" />
+            <Sparkles className="w-5 h-5 text-chart-2" />
             The Oracle
           </CardTitle>
           <CardDescription>Loading your collection to predict the future...</CardDescription>
@@ -81,7 +81,7 @@ export function OracleDisplay({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-500" />
+          <Sparkles className="w-5 h-5 text-chart-2" />
           The Oracle
         </CardTitle>
         <CardDescription>
@@ -147,22 +147,22 @@ export function OracleDisplay({
             <div className="space-y-6">
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <ShoppingCart className="w-5 h-5 text-green-500" />
+                  <ShoppingCart className="w-5 h-5 text-chart-4" />
                   <h4 className="font-semibold">Predicted Next Purchases</h4>
                 </div>
                 <div className="space-y-3">
                   {cached.likelyPurchases.map((purchase, i) => (
                     <div
                       key={i}
-                      className="border border-green-500/20 bg-green-500/5 rounded-lg p-4"
+                      className="border border-chart-4/20 bg-chart-4/5 rounded-lg p-4"
                     >
                       <div className="flex items-baseline gap-2 flex-wrap mb-2">
                         <span className="text-lg font-medium">{purchase.artist}</span>
                         <span className="text-muted-foreground">—</span>
-                        <span className="text-green-600 dark:text-green-400">{purchase.album}</span>
+                        <span className="text-chart-4 dark:text-chart-4">{purchase.album}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{purchase.reason}</p>
-                      <span className="inline-block mt-2 text-xs px-2 py-1 bg-green-500/10 text-green-600 dark:text-green-400 rounded">
+                      <span className="inline-block mt-2 text-xs px-2 py-1 bg-chart-4/10 text-chart-4 dark:text-chart-4 rounded">
                         {purchase.source === "wantlist" ? "From Wantlist" : "Gap Filler"}
                       </span>
                     </div>
@@ -174,22 +174,22 @@ export function OracleDisplay({
 
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <Lightbulb className="w-5 h-5 text-purple-500" />
+                  <Lightbulb className="w-5 h-5 text-chart-2" />
                   <h4 className="font-semibold">Albums You Don&apos;t Know You Want</h4>
                 </div>
                 <div className="space-y-3">
                   {cached.suggestedAdds.map((suggestion, i) => (
                     <div
                       key={i}
-                      className="border border-purple-500/20 bg-purple-500/5 rounded-lg p-4"
+                      className="border border-chart-2/20 bg-chart-2/5 rounded-lg p-4"
                     >
                       <div className="flex items-baseline gap-2 flex-wrap mb-2">
                         <span className="text-lg font-medium">{suggestion.artist}</span>
                         <span className="text-muted-foreground">—</span>
-                        <span className="text-purple-600 dark:text-purple-400">{suggestion.album}</span>
+                        <span className="text-chart-2 dark:text-chart-2">{suggestion.album}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{suggestion.reason}</p>
-                      <span className="inline-block mt-2 text-xs px-2 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded capitalize">
+                      <span className="inline-block mt-2 text-xs px-2 py-1 bg-chart-2/10 text-chart-2 dark:text-chart-2 rounded capitalize">
                         {suggestion.logic.replace("_", " ")} Logic
                       </span>
                     </div>

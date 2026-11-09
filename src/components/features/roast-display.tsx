@@ -103,7 +103,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
         {cached && !isLoading && (
           <ScrollArea className="h-[500px]">
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-destructive/10 to-orange-500/10 rounded-lg p-6 text-center">
+              <div className="bg-gradient-to-r from-destructive/10 to-chart-3/10 rounded-lg p-6 text-center">
                 <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
                   Your Collector Archetype
                 </p>
@@ -141,7 +141,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
                 <ul className="space-y-2">
                   {cached.clicheAlbums.map((album, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-orange-500">•</span>
+                      <span className="text-chart-3">•</span>
                       <span className="text-muted-foreground">{album}</span>
                     </li>
                   ))}

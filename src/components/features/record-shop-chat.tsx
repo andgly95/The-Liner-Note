@@ -268,63 +268,69 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    // On a phone the chat IS the screen: it fills the space between the header
+    // and the bottom bar, and the composer sits on the bottom edge.
+    <Card className="flex flex-col h-[calc(100dvh-10.5rem)] min-h-[420px] md:h-[600px]">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Store className="w-5 h-5 text-primary" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
+              <Store className="w-5 h-5 text-primary shrink-0" />
               The Record Shop
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="hidden sm:block mt-1.5">
               Chat with a knowledgeable record shop owner about pressings, editions, and what to add to your collection.
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
             {messages.length > 0 && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={exportConversation}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 px-2.5 sm:px-3"
                 title="Download conversation as Markdown"
+                aria-label="Export"
               >
                 <Download className="w-4 h-4" />
-                Export
+                <span className="hidden sm:inline">Export</span>
               </Button>
             )}
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowHistory(!showHistory)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 px-2.5 sm:px-3"
+              aria-label={`History, ${conversations.length} conversations`}
             >
               <MessageSquare className="w-4 h-4" />
-              History ({conversations.length})
+              <span className="hidden sm:inline">History</span>
+              <span className="tabular-nums">{conversations.length}</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={startNewConversation}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 px-2.5 sm:px-3"
+              aria-label="New conversation"
             >
               <Plus className="w-4 h-4" />
-              New
+              <span className="hidden sm:inline">New</span>
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex overflow-hidden gap-4">
-        {/* Conversation History Sidebar */}
+      <CardContent className="flex-1 flex overflow-hidden gap-4 relative">
+        {/* Conversation History — covers the chat on a phone, a sidebar from sm up */}
         {showHistory && conversations.length > 0 && (
-          <div className="w-64 border-r pr-4 flex flex-col">
+          <div className="absolute inset-0 z-10 bg-card px-4 sm:px-0 sm:static sm:w-64 sm:border-r sm:pr-4 flex flex-col">
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-medium">Conversations</h4>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearAllConversations}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-destructive"
+                className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="w-3 h-3 mr-1" />
                 Clear All
@@ -336,7 +342,7 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
                     <div
                       key={conv.id}
                       onClick={() => loadConversation(conv)}
-                      className={`p-2 rounded-md cursor-pointer text-sm flex items-center justify-between group hover:bg-muted ${
+                      className={`p-2.5 sm:p-2 rounded-md cursor-pointer text-sm flex items-center justify-between group hover:bg-muted ${
                         conv.id === currentConversationId ? "bg-muted" : ""
                       }`}
                     >
@@ -344,7 +350,8 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="w-6 h-6 opacity-0 group-hover:opacity-100"
+                        className="w-8 h-8 sm:w-6 sm:h-6 sm:opacity-0 sm:group-hover:opacity-100"
+                        aria-label="Delete conversation"
                         onClick={(e) => deleteConversation(conv.id, e)}
                       >
                         <Trash2 className="w-3 h-3" />
@@ -358,14 +365,14 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+          <ScrollArea className="flex-1 sm:pr-4" ref={scrollAreaRef}>
             <div className="space-y-4 pb-4">
               {messages.length === 0 && (
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                     <Store className="w-4 h-4" />
                   </div>
-                  <div className="rounded-lg px-4 py-2 max-w-[80%] bg-muted">
+                  <div className="rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%] sm:max-w-[80%] bg-muted">
                     <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
                       {WELCOME_TEXT}
                     </div>
@@ -393,10 +400,10 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
                     )}
                   </div>
                   <div
-                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                    className={`rounded-2xl px-4 py-2.5 max-w-[85%] sm:max-w-[80%] ${
                       message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        ? "bg-primary text-primary-foreground rounded-tr-sm"
+                        : "bg-muted rounded-tl-sm"
                     }`}
                   >
                     <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
@@ -444,18 +451,20 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex gap-2 pt-4 border-t">
+          <form onSubmit={handleSubmit} className="flex gap-2 pt-3 border-t">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about pressings, editions, recommendations... (Enter to send, Shift+Enter for new line)"
-              className="flex-1 px-3 py-2 text-sm rounded-md border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none min-h-[40px] max-h-[150px]"
+              placeholder="Ask about pressings, editions…"
+              title="Enter to send · Shift+Enter for a new line"
+              enterKeyHint="send"
+              className="flex-1 px-3.5 py-2 text-sm rounded-2xl border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none min-h-[40px] max-h-[150px]"
               disabled={isLoading}
               rows={1}
             />
-            <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="self-end">
+            <Button type="submit" size="icon" disabled={isLoading || !input.trim()} className="self-end rounded-full shrink-0" aria-label="Send">
               <Send className="w-4 h-4" />
             </Button>
           </form>

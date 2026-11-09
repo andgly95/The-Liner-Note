@@ -74,7 +74,7 @@ export function UserSwitcher({ currentUser, viewingUser, onUserSelect }: UserSwi
   const isViewingOther = viewingUser && viewingUser !== currentUser;
 
   return (
-    <Card className={isViewingOther ? "border-blue-500 border-2" : ""}>
+    <Card className={isViewingOther ? "border-primary border-2" : ""}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -82,7 +82,7 @@ export function UserSwitcher({ currentUser, viewingUser, onUserSelect }: UserSwi
             <CardTitle className="text-lg">
               {isViewingOther ? (
                 <span className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-blue-500" />
+                  <Eye className="w-4 h-4 text-primary" />
                   Viewing: {viewingUser}
                 </span>
               ) : (
@@ -167,13 +167,14 @@ export function UserSwitcher({ currentUser, viewingUser, onUserSelect }: UserSwi
                       </Avatar>
                       <span className="text-sm">{friend}</span>
                       {viewingUser === friend && (
-                        <Eye className="w-3 h-3 text-blue-500" />
+                        <Eye className="w-3 h-3 text-primary" />
                       )}
                     </button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      className="h-8 w-8 sm:h-6 sm:w-6 p-0 sm:opacity-0 sm:group-hover:opacity-100"
+                      aria-label={`Remove ${friend}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         removeFriend(friend);

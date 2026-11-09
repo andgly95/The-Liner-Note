@@ -135,7 +135,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
           <ScrollArea className="h-[500px]">
             <div className="space-y-6">
               {/* Score */}
-              <div className="bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-lg p-6 text-center">
+              <div className="bg-gradient-to-r from-primary/10 to-chart-2/10 rounded-lg p-6 text-center">
                 <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
                   Your Obscureness Score
                 </p>
@@ -163,7 +163,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingDown className="w-4 h-4 text-green-500" />
+                    <TrendingDown className="w-4 h-4 text-chart-4" />
                     <h4 className="font-semibold">Most Mainstream</h4>
                   </div>
                   <div className="space-y-2">
@@ -180,7 +180,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="w-4 h-4 text-purple-500" />
+                    <TrendingUp className="w-4 h-4 text-chart-2" />
                     <h4 className="font-semibold">Most Obscure</h4>
                   </div>
                   <div className="space-y-2">

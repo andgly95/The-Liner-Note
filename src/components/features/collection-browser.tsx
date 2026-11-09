@@ -33,7 +33,7 @@ const SORT_LABELS: Record<SortKey, string> = {
 
 const ALL = "__all__";
 const SELECT_CLASS =
-  "px-2 py-2 text-sm rounded-md border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "shrink-0 px-3 py-2 text-sm rounded-full border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 const artistName = (it: DiscogsCollectionItem) =>
   it.basic_information.artists.map((a) => a.name).join(", ");
@@ -221,8 +221,8 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Controls */}
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="relative flex-1 min-w-[180px]">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-2 md:items-center">
+          <div className="relative md:flex-1 md:min-w-[180px]">
             <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
             <input
               value={query}
@@ -231,6 +231,8 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
               className="w-full pl-8 pr-3 py-2 text-sm rounded-md border border-input bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
+          {/* On a phone the filters are one row you swipe along, not three rows of wrap */}
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 items-center overflow-x-auto no-scrollbar md:contents">
           <select value={genre} onChange={(e) => setGenre(e.target.value)} className={SELECT_CLASS}>
             <option value={ALL}>All genres</option>
             {filterOptions.genres.map(([g, c]) => (
@@ -262,16 +264,17 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
               </option>
             ))}
           </select>
-          <Button variant="outline" size="sm" onClick={surprise} disabled={filtered.length === 0}>
+          <Button variant="outline" size="sm" onClick={surprise} disabled={filtered.length === 0} className="shrink-0">
             <Shuffle className="w-4 h-4 mr-1" />
             Surprise me
           </Button>
           {hasFilters && (
-            <Button variant="ghost" size="sm" onClick={resetFilters}>
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="shrink-0">
               <X className="w-4 h-4 mr-1" />
               Clear
             </Button>
           )}
+          </div>
         </div>
 
         {/* Surprise pick */}
@@ -341,8 +344,8 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
         {/* Breakdown bars for the current slice */}
         <div className="grid md:grid-cols-3 gap-4">
           <SliceBars title="Genres" entries={stats.topGenres} total={filtered.length} color="bg-primary" />
-          <SliceBars title="Decades" entries={stats.topDecades} total={filtered.length} color="bg-purple-500" />
-          <SliceBars title="Formats" entries={stats.topFormats} total={filtered.length} color="bg-orange-500" />
+          <SliceBars title="Decades" entries={stats.topDecades} total={filtered.length} color="bg-chart-2" />
+          <SliceBars title="Formats" entries={stats.topFormats} total={filtered.length} color="bg-chart-3" />
         </div>
 
         {/* Results */}
