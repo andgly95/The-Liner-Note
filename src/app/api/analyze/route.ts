@@ -25,8 +25,8 @@ import {
 
 export const maxDuration = 60;
 
-// Defaults to Haiku for cost. Override with ANTHROPIC_MODEL.
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-3-5-20241022";
+// Override with ANTHROPIC_MODEL.
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 
 const ephemeralCache = {
   providerOptions: {

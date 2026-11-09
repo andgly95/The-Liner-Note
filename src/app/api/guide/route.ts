@@ -16,7 +16,7 @@ import type { DiscogsSession } from "@/types/discogs";
 
 export const maxDuration = 120;
 
-const MODEL = process.env.GUIDE_MODEL || "claude-opus-4-7";
+const MODEL = process.env.GUIDE_MODEL || "claude-opus-5-5";
 
 const ephemeralCache = {
   providerOptions: {

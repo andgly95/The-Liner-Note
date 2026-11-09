@@ -9,15 +9,15 @@ prompts live in `src/lib/prompts.ts`; output contracts are Zod schemas in
 
 | Feature | Route | Default model | Override env | Method / stream | Output schema |
 |---------|-------|---------------|--------------|-----------------|---------------|
-| Roast | `POST /api/analyze` (`roast`) | `claude-haiku-3-5-20241022` | `ANTHROPIC_MODEL` | `streamObject` ✓ | `roastResultSchema` |
+| Roast | `POST /api/analyze` (`roast`) | `claude-opus-5-5` | `ANTHROPIC_MODEL` | `streamObject` ✓ | `roastResultSchema` |
 | Gap Filler | `POST /api/analyze` (`gap_filler`) | Haiku 3.5 | `ANTHROPIC_MODEL` | `streamObject` ✓ | `gapFillerResultSchema` |
 | Oracle | `POST /api/analyze` (`oracle`) | Haiku 3.5 | `ANTHROPIC_MODEL` | `streamObject` ✓ | `oracleResultSchema` |
 | Mood | `POST /api/analyze` (`mood`) | Haiku 3.5 | `ANTHROPIC_MODEL` | `streamObject` ✓ | `moodResultSchema` |
 | Obscureness | `POST /api/analyze` (`obscureness`) | Haiku 3.5 | `ANTHROPIC_MODEL` | `streamObject` ✓ | `obscurenessResultSchema` |
-| Record Shop chat | `POST /api/chat` | `claude-opus-4-7` | `ANTHROPIC_MODEL` | `streamText` ✓ | free text |
-| Listening Guide | `POST /api/guide` | `claude-opus-4-7` | `GUIDE_MODEL` | `generateText` (one-shot) | `listeningGuideSchema` |
-| Mixtape (narrow) | `POST /api/mixtape` | `claude-sonnet-4-6` | `MIXTAPE_NARROW_MODEL` | `generateObject` | `mixtapeCandidatesSchema` |
-| Mixtape (sequence) | `POST /api/mixtape` | `claude-opus-4-7` | `MIXTAPE_SEQUENCE_MODEL` | `streamObject` ✓ | `mixtapeResultSchema` |
+| Record Shop chat | `POST /api/chat` | `claude-opus-5-5` | `ANTHROPIC_MODEL` | `streamText` ✓ | free text |
+| Listening Guide | `POST /api/guide` | `claude-opus-5-5` | `GUIDE_MODEL` | `generateText` (one-shot) | `listeningGuideSchema` |
+| Mixtape (narrow) | `POST /api/mixtape` | `claude-opus-5-5` | `MIXTAPE_NARROW_MODEL` | `generateObject` | `mixtapeCandidatesSchema` |
+| Mixtape (sequence) | `POST /api/mixtape` | `claude-opus-5-5` | `MIXTAPE_SEQUENCE_MODEL` | `streamObject` ✓ | `mixtapeResultSchema` |
 
 > Model assignment is cost/quality-tuned per feature, not unified: cheap
 > structured analyses run on **Haiku**; conversational and long-form prose run on

@@ -34,8 +34,8 @@ Collections can be huge; the LLM context isn't. `optimizeCollectionForLLM` compr
 
 ### LLM routes — two distinct patterns
 
-- **`POST /api/analyze`** (`roast` | `gap_filler` | `oracle`): one-shot, expects JSON output. System prompts in `src/lib/prompts.ts` instruct Claude to emit a specific JSON shape; the feature display components (`roast-display.tsx`, `gap-filler-display.tsx`, `oracle-display.tsx`) parse the streamed text. Default model: `claude-haiku-3-5-20241022` (cost). The `oracle` type chains: it consumes the `gap_filler` JSON output as additional context, so gap_filler must run first to feed it.
-- **`POST /api/chat`** (Record Shop): multi-turn conversational, uses `useChat` from `ai/react`. Default model: `claude-opus-4-5-20251101`. Collection + wantlist are jammed into the system prompt every turn (no caching). Conversation history persists to `localStorage` only.
+- **`POST /api/analyze`** (`roast` | `gap_filler` | `oracle`): one-shot, expects JSON output. System prompts in `src/lib/prompts.ts` instruct Claude to emit a specific JSON shape; the feature display components (`roast-display.tsx`, `gap-filler-display.tsx`, `oracle-display.tsx`) parse the streamed text. Default model: `claude-opus-5-5`. Every request goes through `src/lib/anthropic-client.ts`, which adapts it for Opus 5.5 (no sampling params, forced tool choice → `auto` + an instruction, `max_tokens` ≥ 16000 because thinking is always on). The `oracle` type chains: it consumes the `gap_filler` JSON output as additional context, so gap_filler must run first to feed it.
+- **`POST /api/chat`** (Record Shop): multi-turn conversational, uses `useChat` from `ai/react`. Default model: `claude-opus-5-5`. Collection + wantlist are jammed into the system prompt every turn (no caching). Conversation history persists to `localStorage` only.
 
 Both routes use Vercel AI SDK's `streamText` + `toDataStreamResponse()` and have `maxDuration = 60`. Auth check is just "does `discogs_session` cookie exist and parse" — the tokens are passed implicitly via the cookie that's already in scope, not re-validated against Discogs.
 

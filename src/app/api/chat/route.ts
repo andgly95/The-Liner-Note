@@ -8,7 +8,7 @@ import {
 
 export const maxDuration = 60;
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-7";
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 
 const ephemeralCache = {
   providerOptions: {

@@ -22,8 +22,8 @@ import type { DiscogsSession } from "@/types/discogs";
 // Two LLM calls + up to ~15 rate-limited Discogs fetches. Worst case ~75s.
 export const maxDuration = 120;
 
-const NARROW_MODEL = process.env.MIXTAPE_NARROW_MODEL || "claude-sonnet-4-6";
-const SEQUENCE_MODEL = process.env.MIXTAPE_SEQUENCE_MODEL || "claude-opus-4-7";
+const NARROW_MODEL = process.env.MIXTAPE_NARROW_MODEL || "claude-opus-5-5";
+const SEQUENCE_MODEL = process.env.MIXTAPE_SEQUENCE_MODEL || "claude-opus-5-5";
 
 // Cap on items we feed into stage 1. The narrowing LLM only needs enough variety
 // to pick candidates; a 2000-record indexed string blows the context budget and
