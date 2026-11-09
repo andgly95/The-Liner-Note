@@ -71,3 +71,40 @@ From "I'm holding a copy of this" to the exact Discogs release, in your collecti
   user's collection — never a username from the request, so browsing a friend's
   collection cannot add to theirs. It checks for existing copies first (409) and
   adds another only when asked. The landing page says so.
+
+
+## The social app (Phase 1) — log, rate and rank albums
+
+The Liner Note is becoming a social "rate your music" app. Free core: log albums
+you've heard, rate them, and **rank their tracks**. Premium (not built yet):
+extra ranking modes, alternative rating scales, all AI features, and the Discogs
+collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]`;
+`/` redirects to `/home`, which is also the signed-out pitch.
+
+- **Accounts** (`src/lib/auth/`): our own users table, with Google and Discogs
+  as identities (`provider` + `subject`). Session = `ln_session`, an HS256 JWT
+  holding only the user id (`SESSION_SECRET` in `.env.local`). Signing in with a
+  new identity while signed in LINKS it; accounts are never merged by email.
+  **The old `discogs_session` cookie is unsigned JSON** — it is never trusted for
+  identity; `/api/me` upgrades it by asking Discogs whose tokens they are.
+- **Google**: `GOOGLE_CLIENT_ID` + `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in `.env.local`
+  (same value). Empty = the Google button is simply absent.
+- **Database** (`src/lib/db.ts`): SQLite at `data/liner.db` (gitignored), WAL,
+  migrations by `PRAGMA user_version`. `better-sqlite3` is in
+  `serverComponentsExternalPackages`.
+- **Catalogue** (`src/lib/musicbrainz.ts`): an album is a MusicBrainz *release
+  group*; tracks come from one representative release (official, matching the
+  group's first-release date, preferring XW/US/GB). Tracks are keyed by
+  RECORDING id so a ranking survives a change of representative release. 1 req/s
+  to MusicBrainz, UA carries the app URL. Search re-ranks by release count
+  (the Beatles' Rubber Soul has 121 releases; covers have 1). Discographies use
+  `release-group-status=website-default` (705 Beatles groups → 187).
+- **The two shapes everything premium depends on** (`src/lib/scales.ts`,
+  `src/lib/library.ts`): a rating is a 0–100 score + the scale it was given on;
+  a ranking is an ordered list of every track + a mode-specific payload. Every
+  mode feeds the same community ranking (mean fractional position). Premium
+  scales/modes are refused server-side with 402. A ranking must list every
+  track exactly once. Un-listening deletes your rating and ranking.
+- **Previews**: `next dev` in a scratch copy with a symlinked node_modules is
+  fine. **Never `next build` there** — on 2026-11-09 that emptied this repo's
+  node_modules (suspect: standalone output). Verify builds with a real copy.

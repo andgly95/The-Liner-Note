@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+
 import { cookies } from "next/headers";
 import { discogsClient } from "@/lib/discogs";
+
+// Never prerendered: every visit mints a fresh request token, so a cached
+// response would hand everybody the same one.
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

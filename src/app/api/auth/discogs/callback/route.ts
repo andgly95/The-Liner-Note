@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { discogsClient } from "@/lib/discogs";
+import { currentUser, signSession, cookieOptions, SESSION_COOKIE } from "@/lib/auth/session";
+import { userForClaim } from "@/lib/auth/users";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +50,17 @@ export async function GET(request: NextRequest) {
       accessToken,
       accessTokenSecret,
     });
+
+    // Your Liner Note account: signing in with Discogs while signed in links
+    // it to you; signed out, it signs you in (making an account the first time).
+    const account = userForClaim(
+      { provider: "discogs", subject: String(user.id), name: user.username, username: user.username, avatarUrl: user.avatar_url },
+      await currentUser()
+    );
+    if (!account) {
+      return NextResponse.redirect(new URL("/home?error=discogs_linked_elsewhere", appUrl));
+    }
+    cookieStore.set(SESSION_COOKIE, await signSession(account.id), cookieOptions());
 
     // Clear request token cookies
     cookieStore.delete("discogs_request_token");

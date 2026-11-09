@@ -1,0 +1,134 @@
+// The Liner Note's own database: people, the albums they've listened to, and
+// how they rate and rank them. SQLite on the Pi for now (one file, WAL), with
+// plain SQL so a move to Postgres later is a port, not a rewrite.
+//
+// Two shapes are deliberate and everything premium depends on them:
+//   · a RATING is stored as score 0–100 plus the scale it was given on, so any
+//     scale (5 stars, 10 points, 100, custom) averages with every other one;
+//   · a TRACK RANKING is stored as an ordered list of tracks plus a mode-specific
+//     payload (tier letters, positions on a line…), so every ranking mode feeds
+//     the same community ranking.
+import Database from "better-sqlite3";
+import fs from "node:fs";
+import path from "node:path";
+
+const FILE = process.env.LINER_DB || path.join(process.cwd(), "data", "liner.db");
+
+// Each entry runs once, in order; PRAGMA user_version records how far we got.
+const MIGRATIONS: string[] = [
+  `
+  CREATE TABLE users (
+    id          INTEGER PRIMARY KEY,
+    handle      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    name        TEXT NOT NULL,
+    avatar_url  TEXT,
+    bio         TEXT,
+    premium     INTEGER NOT NULL DEFAULT 0,
+    created_at  INTEGER NOT NULL
+  );
+  -- One person, several ways in (google, discogs). provider+subject is the
+  -- identity the provider vouches for; never an email we were merely told.
+  CREATE TABLE identities (
+    provider    TEXT NOT NULL,
+    subject     TEXT NOT NULL,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    email       TEXT,
+    username    TEXT,
+    created_at  INTEGER NOT NULL,
+    PRIMARY KEY (provider, subject)
+  );
+  CREATE INDEX identities_user ON identities(user_id);
+
+  -- The catalogue, cached from MusicBrainz. An "album" is a MusicBrainz release
+  -- group: the work, not any particular pressing of it.
+  CREATE TABLE artists (
+    mbid        TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    sort_name   TEXT,
+    disambig    TEXT,
+    fetched_at  INTEGER NOT NULL
+  );
+  CREATE TABLE albums (
+    mbid        TEXT PRIMARY KEY,
+    title       TEXT NOT NULL,
+    artist      TEXT NOT NULL,
+    artist_mbid TEXT,
+    year        INTEGER,
+    type        TEXT,
+    secondary   TEXT,
+    release_mbid TEXT,
+    tracks_at   INTEGER,
+    fetched_at  INTEGER NOT NULL
+  );
+  CREATE INDEX albums_artist ON albums(artist_mbid);
+  CREATE TABLE tracks (
+    album_mbid  TEXT NOT NULL REFERENCES albums(mbid) ON DELETE CASCADE,
+    idx         INTEGER NOT NULL,
+    key         TEXT NOT NULL,
+    disc        INTEGER NOT NULL,
+    number      TEXT NOT NULL,
+    title       TEXT NOT NULL,
+    length_ms   INTEGER,
+    PRIMARY KEY (album_mbid, key)
+  );
+  -- An artist's discography is cached as a fetch time; its albums live above.
+  CREATE TABLE artist_discogs (
+    artist_mbid TEXT PRIMARY KEY,
+    album_mbids TEXT NOT NULL,
+    fetched_at  INTEGER NOT NULL
+  );
+
+  CREATE TABLE listens (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    album_mbid  TEXT NOT NULL REFERENCES albums(mbid),
+    created_at  INTEGER NOT NULL,
+    PRIMARY KEY (user_id, album_mbid)
+  );
+  CREATE INDEX listens_album ON listens(album_mbid);
+  CREATE INDEX listens_recent ON listens(created_at);
+
+  CREATE TABLE ratings (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    album_mbid  TEXT NOT NULL REFERENCES albums(mbid),
+    score       INTEGER NOT NULL CHECK (score BETWEEN 0 AND 100),
+    scale       TEXT NOT NULL,
+    raw         TEXT NOT NULL,
+    updated_at  INTEGER NOT NULL,
+    PRIMARY KEY (user_id, album_mbid)
+  );
+  CREATE INDEX ratings_album ON ratings(album_mbid);
+
+  CREATE TABLE rankings (
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    album_mbid  TEXT NOT NULL REFERENCES albums(mbid),
+    mode        TEXT NOT NULL,
+    track_order TEXT NOT NULL,
+    payload     TEXT,
+    updated_at  INTEGER NOT NULL,
+    PRIMARY KEY (user_id, album_mbid)
+  );
+  CREATE INDEX rankings_album ON rankings(album_mbid);
+  `,
+];
+
+let db: Database.Database | null = null;
+
+export function getDb(): Database.Database {
+  if (db) return db;
+  fs.mkdirSync(path.dirname(FILE), { recursive: true });
+  const d = new Database(FILE);
+  d.pragma("journal_mode = WAL");
+  d.pragma("foreign_keys = ON");
+  d.pragma("busy_timeout = 3000");
+  const have = d.pragma("user_version", { simple: true }) as number;
+  for (let v = have; v < MIGRATIONS.length; v++) {
+    d.transaction(() => {
+      d.exec(MIGRATIONS[v]);
+      d.pragma(`user_version = ${v + 1}`);
+    })();
+  }
+  db = d;
+  return d;
+}
+
+export const now = () => Date.now();

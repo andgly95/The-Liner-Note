@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -104,6 +105,7 @@ export default function Dashboard() {
   const [gapFillerResults, setGapFillerResults] = useState<GapFillerResult | null>(null);
   const [activeTab, setActiveTab] = useState("roast");
   const [viewingUser, setViewingUser] = useState<string | null>(null);
+  const [needsDiscogs, setNeedsDiscogs] = useState(false);
 
   // Restore last-used tab from localStorage so refresh doesn't drop the user back to Roast.
   useEffect(() => {
@@ -135,7 +137,9 @@ export default function Dashboard() {
         const res = await fetch("/api/auth/session");
         const data = await res.json();
         if (!data.authenticated) {
-          router.push("/");
+          // Signed in to The Liner Note but no record collection linked: offer
+          // to link one rather than bouncing back to the start.
+          setNeedsDiscogs(true);
           return;
         }
         setUser(data.user);
@@ -236,6 +240,23 @@ export default function Dashboard() {
     );
   }
 
+  if (needsDiscogs) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-sm w-full rounded-2xl border bg-card p-6 text-center space-y-4">
+          <div className="vinyl-record w-14 h-14 mx-auto" />
+          <h1 className="font-display text-2xl font-semibold">Your record collection</h1>
+          <p className="text-sm text-muted-foreground">
+            Link Discogs to bring in your collection and wantlist, find exactly which pressing you own, and use the
+            collection tools. We only ever write to Discogs when you add a record yourself.
+          </p>
+          <Button asChild className="w-full rounded-full"><a href="/api/auth/discogs">Link Discogs</a></Button>
+          <Button asChild variant="ghost" className="w-full rounded-full"><Link href="/home">Back to Home</Link></Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) return null;
 
   const busy = fetchingCollection || fetchingWantlist;
@@ -255,12 +276,12 @@ export default function Dashboard() {
       {/* Header — one line at any width; the account lives behind the avatar */}
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <Link href="/home" className="flex items-center gap-2.5 min-w-0" aria-label="The Liner Note — Home">
             <div className="vinyl-record w-7 h-7 shrink-0" />
             <h1 className="font-display text-lg sm:text-xl font-semibold tracking-tight whitespace-nowrap">
               The Liner Note
             </h1>
-          </div>
+          </Link>
           <div className="relative">
             <button
               type="button"
