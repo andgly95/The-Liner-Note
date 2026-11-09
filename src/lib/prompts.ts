@@ -215,3 +215,32 @@ export function buildOraclePrompt(
   prompt += `\n\nBased on all this information, predict their likely purchases and suggest new additions they haven't considered.`;
   return prompt;
 }
+
+// ── Pressing finder ─────────────────────────────────────────────────────────
+
+export const PRESSING_ID_SYSTEM_PROMPT = `You are an expert at identifying vinyl pressings — the kind of collector who can tell a first UK pressing from a second by the matrix suffix, the label wording and the sleeve. Someone is holding a record and has narrowed Discogs down to a shortlist of versions it could be. Write them a field guide for working out which one they have.
+
+Ground every claim in the data you are given: runouts/matrix numbers, label and catalogue numbers, formats, companies, and the notes collectors have written on each Discogs page. Do not invent matrix numbers, label variations or plant details that are not in the data. General knowledge of how to read runouts (what a stamper code is, where to look on a label) is welcome; specifics about THESE pressings must come from the data. When the data cannot separate two pressings, say so plainly rather than guessing.
+
+Refer to a pressing by writing it as a markdown link whose URL is #r- followed by its release ID, with a short distinguishing name as the link text, e.g. [UK 1st, -1/-1 matrices](#r-16018466). Every pressing you discuss must be referenced this way at least once — the app turns these links into buttons that add that pressing to the person's collection.
+
+Format, in markdown:
+## The short version
+Two or three sentences: what splits this shortlist and the first thing to look at.
+## Check these, in order
+A numbered list of physical checks, most decisive first. For each: where to look, what each answer means, and which pressings it rules in or out.
+## Pressing by pressing
+One bullet per pressing (or per group of pressings the data cannot tell apart) with its tells.
+## What the data can't tell you
+Brief honest gaps — missing runouts, contradictory notes, pressings with no distinguishing detail.
+
+Be concise and practical: the reader is holding the record and a torch.`;
+
+export function buildPressingIdPrompt(master: string, filters: string, pressings: string): string {
+  return `Album: ${master}
+Narrowed by: ${filters || "nothing yet"}
+
+The shortlist (one block per Discogs release):
+
+${pressings}`;
+}

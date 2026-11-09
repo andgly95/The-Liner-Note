@@ -48,3 +48,26 @@ Both routes use Vercel AI SDK's `streamText` + `toDataStreamResponse()` and have
 ### Deployment
 
 `Dockerfile` is multi-stage, relies on `output: 'standalone'` in `next.config.js`. `docker-compose.yml` reads env vars from the host shell (no `env_file`). When OAuth callback fails in production, check that `NEXT_PUBLIC_APP_URL` matches what's registered with the Discogs app and is `https://` so the session cookie sets `secure: true`.
+
+
+## Pressings — the pressing finder
+
+`src/components/features/pressing-finder.tsx`, routes under `src/app/api/pressings/`.
+From "I'm holding a copy of this" to the exact Discogs release, in your collection.
+
+- **Facets first, details second.** `/masters/{id}/versions` filters server-side
+  (`format`, `released`, `country`, `label` — values are ANDed, and the label
+  value is the display name, not the `+`-encoded facet value) and returns facet
+  counts, so narrowing is one request per tap. Runouts and notes exist only on
+  `/releases/{id}`, one request each, so they load only once ≤ `MAX_DETAILS` (60)
+  are left, paced at 1.1s by `pressing-server.ts` and cached in-process for a day.
+- **Runout matching ignores case, spaces and dashes** (`normalizeRunout`) —
+  "xex 709 1" finds "XEX 709 - 1".
+- **The guide** (`/api/pressings/identify`, Opus 5.5) reads runouts, labels,
+  formats, companies and collector notes for ≤ 40 pressings and streams markdown.
+  It refers to pressings as `[name](#r-ID)`; the client renders those as chips
+  with an Add button. The prompt forbids inventing matrix numbers.
+- **The one write in the app**: `/api/pressings/add` → folder 1 of the SESSION
+  user's collection — never a username from the request, so browsing a friend's
+  collection cannot add to theirs. It checks for existing copies first (409) and
+  adds another only when asked. The landing page says so.

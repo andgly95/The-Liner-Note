@@ -117,8 +117,8 @@ export default function Home() {
                 <a href="/api/auth/discogs">Connect with Discogs</a>
               </Button>
               <p className="text-xs text-muted-foreground mt-4">
-                We only read your collection data. We never modify your Discogs
-                account.
+                We read your collection and wantlist. The only thing we ever write is a
+                record you choose to add with the Pressings finder.
               </p>
             </CardContent>
           </Card>

@@ -363,6 +363,141 @@ export class DiscogsClient {
 
     return allItems;
   }
+
+  /* ── Pressing finder ─────────────────────────────────────────────────── */
+
+  /** Search masters (the "album" level that groups every pressing). */
+  async searchMasters(query: string, tokens: DiscogsOAuthTokens): Promise<DiscogsSearchResponse> {
+    return this.authenticatedRequest<DiscogsSearchResponse>(
+      "GET",
+      `/database/search?type=master&per_page=20&q=${encodeURIComponent(query)}`,
+      tokens
+    );
+  }
+
+  async getMaster(masterId: number, tokens: DiscogsOAuthTokens): Promise<DiscogsMaster> {
+    return this.authenticatedRequest<DiscogsMaster>("GET", `/masters/${masterId}`, tokens);
+  }
+
+  /**
+   * One page of a master's versions. Filters are ANDed by Discogs: a value list
+   * for one key (format=Mono&format=LP) means "Mono AND LP". The response also
+   * carries facet counts for what is left, which drive the filter chips.
+   */
+  async getMasterVersions(
+    masterId: number,
+    filters: Partial<Record<VersionFilterKey, string[]>>,
+    tokens: DiscogsOAuthTokens,
+    page = 1
+  ): Promise<DiscogsVersionsResponse> {
+    const qs = [`per_page=100`, `page=${page}`];
+    for (const key of VERSION_FILTER_KEYS) {
+      for (const v of filters[key] ?? []) qs.push(`${key}=${encodeURIComponent(v)}`);
+    }
+    return this.authenticatedRequest<DiscogsVersionsResponse>(
+      "GET",
+      `/masters/${masterId}/versions?${qs.join("&")}`,
+      tokens
+    );
+  }
+
+  /** Everything about one pressing — runouts, notes, companies, label details. */
+  async getReleaseFull(releaseId: number, tokens: DiscogsOAuthTokens): Promise<DiscogsReleaseFull> {
+    return this.authenticatedRequest<DiscogsReleaseFull>("GET", `/releases/${releaseId}`, tokens);
+  }
+
+  /**
+   * Add a release to the signed-in user's collection, in folder 1
+   * ("Uncategorized" — the only folder every account is guaranteed to have).
+   * Discogs allows several instances of one release, so this never fails as a
+   * duplicate; the caller checks first if that matters.
+   */
+  async addToCollection(
+    username: string,
+    releaseId: number,
+    tokens: DiscogsOAuthTokens
+  ): Promise<{ instance_id: number; resource_url: string }> {
+    return this.authenticatedRequest(
+      "POST",
+      `/users/${encodeURIComponent(username)}/collection/folders/1/releases/${releaseId}`,
+      tokens
+    );
+  }
+
+  /** How many copies of this release the user already has (any folder). */
+  async collectionInstances(
+    username: string,
+    releaseId: number,
+    tokens: DiscogsOAuthTokens
+  ): Promise<number> {
+    const r = await this.authenticatedRequest<{ releases?: unknown[] }>(
+      "GET",
+      `/users/${encodeURIComponent(username)}/collection/releases/${releaseId}`,
+      tokens
+    );
+    return r.releases?.length ?? 0;
+  }
 }
 
 export const discogsClient = new DiscogsClient();
+
+export const VERSION_FILTER_KEYS = ["format", "released", "country", "label"] as const;
+export type VersionFilterKey = (typeof VERSION_FILTER_KEYS)[number];
+
+export interface DiscogsSearchResponse {
+  results: Array<{
+    id: number;
+    master_id?: number;
+    title: string;
+    year?: string;
+    thumb?: string;
+    cover_image?: string;
+    format?: string[];
+    country?: string;
+  }>;
+}
+
+export interface DiscogsMaster {
+  id: number;
+  title: string;
+  year?: number;
+  artists?: { name: string }[];
+  images?: { uri: string; uri150?: string; type: string }[];
+}
+
+export interface DiscogsVersion {
+  id: number;
+  title: string;
+  label: string;
+  country: string;
+  format: string;
+  catno: string;
+  released: string;
+  thumb?: string;
+  major_formats?: string[];
+  stats?: { community?: { in_collection?: number; in_wantlist?: number } };
+}
+
+export interface DiscogsVersionsResponse {
+  pagination: { page: number; pages: number; items: number };
+  filters: { applied: Record<string, string[]>; available: Record<string, Record<string, number>> };
+  filter_facets?: Array<{ id: string; title: string; values: Array<{ title: string; value: string; count: number }> }>;
+  versions: DiscogsVersion[];
+}
+
+export interface DiscogsReleaseFull {
+  id: number;
+  master_id?: number;
+  title: string;
+  year?: number;
+  released?: string;
+  country?: string;
+  notes?: string;
+  artists?: { name: string }[];
+  labels?: { name: string; catno: string }[];
+  formats?: { name: string; qty: string; text?: string; descriptions?: string[] }[];
+  identifiers?: { type: string; value: string; description?: string }[];
+  companies?: { name: string; entity_type_name: string }[];
+  images?: { uri: string; uri150?: string; type: string }[];
+  community?: { have?: number; want?: number };
+}

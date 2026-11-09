@@ -152,3 +152,14 @@
 .prose-roast strong {
   @apply font-bold text-primary;
 }
+
+/* Markdown from Claude (the pressing guide). There is no typography plugin in
+   this project, so `prose` does nothing — these are the few rules it needs. */
+.md-guide h2 { @apply font-display text-base font-semibold mt-5 mb-2 first:mt-1; }
+.md-guide h3 { @apply font-semibold mt-4 mb-1.5; }
+.md-guide p { @apply my-2 leading-relaxed; }
+.md-guide ul { @apply list-disc pl-5 my-2 space-y-1.5; }
+.md-guide ol { @apply list-decimal pl-5 my-2 space-y-2; }
+.md-guide li { @apply leading-relaxed pl-0.5; }
+.md-guide strong { @apply font-semibold; }
+.md-guide code { @apply font-mono text-[0.85em] bg-muted rounded px-1 py-0.5; }

@@ -22,6 +22,7 @@ import {
   BookOpen,
   Compass,
   ChevronDown,
+  ScanLine,
 } from "lucide-react";
 import { RoastDisplay } from "@/components/features/roast-display";
 import { GapFillerDisplay } from "@/components/features/gap-filler-display";
@@ -32,6 +33,7 @@ import { ObscurenessDisplay } from "@/components/features/obscureness-display";
 import { CollectionBrowser } from "@/components/features/collection-browser";
 import { MixtapeDisplay } from "@/components/features/mixtape-display";
 import { GuideDisplay } from "@/components/features/guide-display";
+import { PressingFinder } from "@/components/features/pressing-finder";
 import { UserSwitcher } from "@/components/features/user-switcher";
 import { CollectionStats } from "@/components/features/collection-stats";
 import type { CompressedCollection, DiscogsCollectionItem } from "@/types/discogs";
@@ -72,6 +74,7 @@ const DISCOVER = [
 const DISCOVER_SET = new Set<string>(DISCOVER.map((d) => d.value));
 const BOTTOM_NAV = [
   { value: "discover", label: "Discover", icon: Compass },
+  { value: "pressings", label: "Pressings", icon: ScanLine },
   { value: "mixtape", label: "Mixtape", icon: ListMusic },
   { value: "guides", label: "Guides", icon: BookOpen },
   { value: "browse", label: "Browse", icon: Library },
@@ -87,6 +90,7 @@ const VALID_TABS = new Set([
   "browse",
   "mixtape",
   "guides",
+  "pressings",
 ]);
 
 export default function Dashboard() {
@@ -208,7 +212,8 @@ export default function Dashboard() {
         const el = contentRef.current;
         if (!el) return;
         const top = el.getBoundingClientRect().top + window.scrollY - 64;
-        if (window.scrollY > top || next === "shop") window.scrollTo({ top, behavior: "smooth" });
+        // Tools (the finder, the shop) open AT the tool; the rest only scroll back up.
+        if (window.scrollY > top || next === "shop" || next === "pressings") window.scrollTo({ top, behavior: "smooth" });
       });
     },
     [handleTabChange, lastDiscover]
@@ -240,6 +245,10 @@ export default function Dashboard() {
   };
   const recent = collection?.raw?.slice(0, 20) ?? [];
   const navActive = DISCOVER_SET.has(activeTab) ? "discover" : activeTab;
+  // Only YOUR collection says what you own — not a friend's you are browsing.
+  const ownedReleaseIds = !viewingUser && collection?.raw
+    ? new Set(collection.raw.map((it) => it.basic_information.id))
+    : undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -409,7 +418,11 @@ export default function Dashboard() {
         <div ref={contentRef} className="scroll-mt-16" />
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           {/* Desktop: the full row. On a phone it is replaced by the bottom bar. */}
-          <TabsList className="hidden md:grid w-full md:grid-cols-5 lg:grid-cols-9 mb-8 h-auto gap-1">
+          <TabsList className="hidden md:grid w-full md:grid-cols-5 lg:grid-cols-10 mb-8 h-auto gap-1">
+            <TabsTrigger value="pressings" className="flex items-center gap-1.5">
+              <ScanLine className="w-4 h-4 shrink-0" />
+              Pressings
+            </TabsTrigger>
             <TabsTrigger value="roast" className="flex items-center gap-1.5">
               <Flame className="w-4 h-4 shrink-0" />
               Roast
@@ -469,6 +482,10 @@ export default function Dashboard() {
               ))}
             </div>
           )}
+          <TabsContent value="pressings">
+            <PressingFinder ownedReleaseIds={ownedReleaseIds} />
+          </TabsContent>
+
           <TabsContent value="roast">
             <RoastDisplay
               collectionString={collection?.collectionString || ""}
@@ -549,7 +566,7 @@ export default function Dashboard() {
         className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-safe"
         aria-label="Sections"
       >
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {BOTTOM_NAV.map(({ value, label, icon: Icon }) => {
             const on = navActive === value;
             return (
@@ -557,11 +574,11 @@ export default function Dashboard() {
                 key={value}
                 onClick={() => goTo(value)}
                 aria-current={on ? "page" : undefined}
-                className={`flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-[11px] font-medium transition-colors ${
+                className={`flex flex-col items-center gap-0.5 pt-2 pb-1.5 text-[10.5px] font-medium tracking-tight transition-colors ${
                   on ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <span className={`flex items-center justify-center w-12 h-7 rounded-full transition-colors ${on ? "bg-primary/10" : ""}`}>
+                <span className={`flex items-center justify-center w-11 h-7 rounded-full transition-colors ${on ? "bg-primary/10" : ""}`}>
                   <Icon className="w-5 h-5" />
                 </span>
                 {label}
