@@ -38,7 +38,7 @@ import {
   Ban,
 } from "lucide-react";
 import {
-  MAX_DETAILS, MAX_IDENTIFY, normalizeRunout, runoutMatches, looksLikeBarcode, barcodeDigits, type PressingDetail,
+  MAX_DETAILS, MAX_IDENTIFY, normalizeRunout, runoutMatches, looksLikeBarcode, barcodeDigits, isFormatChip, type PressingDetail,
 } from "@/lib/pressing";
 import { BarcodeScanner } from "./barcode-scanner";
 import { PressingViewer } from "./pressing-viewer";
@@ -56,7 +56,7 @@ interface Version {
   id: number; label: string; country: string; format: string; catno: string; released: string; thumb?: string; have?: number;
 }
 interface VersionsData {
-  total: number; listed: number;
+  total: number; listed: number; formatExact?: boolean;
   available: Record<string, Record<string, number>>;
   versions: Version[];
 }
@@ -70,7 +70,6 @@ interface PressingFinderProps {
 }
 
 const emptyFilters = (): Record<FilterKey, string[]> => ({ format: [], released: [], country: [], label: [] });
-const VINYL_KEY = "ln-vinyl-only";
 
 export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const [query, setQuery] = useState("");
@@ -95,33 +94,6 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
 
   const [adds, setAdds] = useState<Record<number, AddState>>({});
   const [openNotes, setOpenNotes] = useState<Set<number>>(new Set());
-
-  // Most people here are holding a record, not a CD: start every album at
-  // Format: Vinyl. Remembered per device. Format chips AND together (Discogs
-  // does that server-side), so Vinyl + Mono is mono vinyl, not "either".
-  const [vinylOnly, setVinylOnly] = useState(true);
-  useEffect(() => {
-    try {
-      if (localStorage.getItem(VINYL_KEY) === "0") setVinylOnly(false);
-    } catch {}
-  }, []);
-  // A barcode that only CDs carry would otherwise come up empty.
-  const startFilters = (bc: { versions: Version[] } | null, vinyl = vinylOnly) => {
-    const f = emptyFilters();
-    if (vinyl && (!bc || bc.versions.some((v) => /\bVinyl\b/.test(v.format)))) f.format = ["Vinyl"];
-    return f;
-  };
-  const setAlwaysVinyl = (on: boolean) => {
-    setVinylOnly(on);
-    try {
-      localStorage.setItem(VINYL_KEY, on ? "1" : "0");
-    } catch {}
-    setGuide("");
-    setFilters((f) => ({
-      ...f,
-      format: on ? (f.format.includes("Vinyl") ? f.format : ["Vinyl", ...f.format]) : f.format.filter((v) => v !== "Vinyl"),
-    }));
-  };
 
   const [scanning, setScanning] = useState(false);
   const [barcodeResult, setBarcodeResult] = useState<BarcodeResult | null>(null);
@@ -169,7 +141,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
       if (!res.ok) throw new Error(body.error || "Barcode lookup failed");
       const r = body as BarcodeResult;
       if (!r.masters.length && !r.loose.length) {
-        setSearchNote(`No release on Discogs lists the barcode ${code}. Records from before the 1980s rarely had one — try the artist and album instead.`);
+        setSearchNote(`No vinyl release on Discogs lists the barcode ${code}. Records from before the 1980s rarely had one — try the artist and album instead.`);
         setHits([]);
         return;
       }
@@ -190,7 +162,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     setBarcode(bc);
     setBarcodeResult(null);
     setRuledOut(new Set());
-    setFilters(startFilters(bc));
+    setFilters(emptyFilters());
     setRunout("");
     setGuide("");
     setHits(null);
@@ -244,7 +216,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
 
   // Formats are ordered by what tells pressings apart, not by count — sorted by
   // count, "Mono" sat thirteenth behind "Album" and "CD".
-  const FORMAT_FIRST = ["Vinyl", "LP", "Mono", "Stereo", '7"', '10"', '12"', "Test Pressing", "Promo", "Reissue", "Repress", "Misprint"];
+  const FORMAT_FIRST = ["LP", "Mono", "Stereo", '7"', '10"', '12"', "Test Pressing", "Promo", "Reissue", "Repress", "Misprint"];
   const rank = (v: string) => {
     const i = FORMAT_FIRST.indexOf(v);
     return i === -1 ? FORMAT_FIRST.length : i;
@@ -254,7 +226,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   // worked out here instead of asking Discogs. Values within one kind AND
   // together, as Discogs' own filters do.
   const valuesOf = (v: Version, key: FilterKey): string[] =>
-    key === "format" ? v.format.split(/,\s*/).filter(Boolean)
+    key === "format" ? v.format.split(/,\s*/).filter((x) => x && isFormatChip(x))
       : key === "released" ? [v.released?.slice(0, 4)].filter(Boolean)
         : key === "country" ? [v.country].filter(Boolean)
           : [v.label].filter(Boolean);
@@ -277,8 +249,10 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const facetValues = (key: FilterKey, limit: number, order: "count" | "value") => {
     const avail = Object.entries(available[key] ?? {});
     const chosen = filters[key];
+    // A format every remaining pressing has ("LP 12" of 12) can't narrow anything.
+    const all = barcode ? versions.length : data?.formatExact ? data.total : Infinity;
     const rest = avail
-      .filter(([v]) => !chosen.includes(v))
+      .filter(([v, n]) => !chosen.includes(v) && !(key === "format" && n >= all))
       .sort((a, b) =>
         order === "value"
           ? a[0].localeCompare(b[0])
@@ -600,7 +574,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               </div>
               <div className="text-muted-foreground text-xs">Only the releases that print this code. Narrow further below.</div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(startFilters(null)); setRuledOut(new Set()); setGuide(""); }}>
+            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(emptyFilters()); setRuledOut(new Set()); setGuide(""); }}>
               All versions
             </Button>
           </CardContent>
@@ -622,20 +596,6 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
                       <span className="normal-case tracking-normal font-normal"> · all of these</span>
                     )}
                   </span>
-                  {key === "format" && (
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-                      Always vinyl
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={vinylOnly}
-                        onClick={() => setAlwaysVinyl(!vinylOnly)}
-                        className={`relative w-9 h-5 rounded-full transition-colors ${vinylOnly ? "bg-primary" : "bg-muted-foreground/30"}`}
-                      >
-                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background shadow transition-transform ${vinylOnly ? "translate-x-4" : ""}`} />
-                      </button>
-                    </label>
-                  )}
                 </div>
                 <div className="-mx-3 px-3 sm:-mx-4 sm:px-4 scroll-px-3 flex gap-1.5 overflow-x-auto no-scrollbar">
                   {chosen.map((v) => (
@@ -654,15 +614,19 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
                       onClick={() => toggleFilter(key, v)}
                       className="shrink-0 rounded-full border bg-background px-3 py-1.5 text-sm hover:bg-accent"
                     >
-                      {v} <span className="text-muted-foreground tabular-nums">{n}</span>
+                      {v}
+                      {/* Format counts come from the listed versions; past 300 they'd be a sample, so none. */}
+                      {(key !== "format" || barcode || data?.formatExact) && (
+                        <span className="text-muted-foreground tabular-nums"> {n}</span>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
             );
           })}
-          {(runout.trim() || JSON.stringify(filters) !== JSON.stringify(startFilters(barcode))) && (
-            <button className="text-sm text-primary font-medium" onClick={() => { setFilters(startFilters(barcode)); setRunout(""); setGuide(""); }}>
+          {filterSummary && (
+            <button className="text-sm text-primary font-medium" onClick={() => { setFilters(emptyFilters()); setRunout(""); setGuide(""); }}>
               Clear all filters
             </button>
           )}

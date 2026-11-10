@@ -1,6 +1,6 @@
 import { discogsClient, type DiscogsBarcodeSearch } from "@/lib/discogs";
 import { paced } from "@/lib/pressing-server";
-import { barcodeDigits, barcodeVariants } from "@/lib/pressing";
+import { barcodeDigits, barcodeVariants, isVinyl } from "@/lib/pressing";
 import { sessionOrNull, unauthorized } from "../_session";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,8 @@ export async function GET(req: Request) {
       for (let page = 1; page <= PAGES; page++) {
         const res = await paced(() => discogsClient.searchBarcode(q, session.tokens, page));
         for (const r of res.results) {
-          if ((r.barcode ?? []).some((b) => wanted.has(barcodeDigits(b)))) found.set(r.id, r);
+          // Vinyl only, like everything else in the finder.
+          if ((r.barcode ?? []).some((b) => wanted.has(barcodeDigits(b))) && isVinyl(r.format ?? [])) found.set(r.id, r);
         }
         if (page >= res.pagination.pages) break;
       }

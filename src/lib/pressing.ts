@@ -62,3 +62,24 @@ export function barcodeVariants(code: string): string[] {
   if (d.length === 12) out.add("0" + d);
   return Array.from(out);
 }
+
+// This is a record finder: every list is vinyl, always, implicitly. "Vinyl" is
+// sent with every versions request (Discogs ANDs format values), and neither
+// it nor any other medium is ever offered as a chip — a vinyl box set that
+// also contains a CD would otherwise put "CD" back on screen.
+export const ALWAYS_FORMAT = "Vinyl";
+const OTHER_MEDIA = new Set([
+  "Vinyl", "CD", "CDr", "CDV", "SACD", "Hybrid", "Cassette", "Microcassette", "DAT", "DCC", "File", "DVD", "DVDr",
+  "Blu-ray", "Blu-ray-R", "HD DVD", "Minidisc", "VHS", "Betamax", "Laserdisc", "Reel-To-Reel", "8-Track Cartridge",
+  "4-Track Cartridge", "Floppy Disk", "Memory Stick", "USB", "UMD", "Shellac", "Lathe Cut", "Acetate", "All Media",
+  "Hybrid", "MVD", "VCD", "SVCD", "Edison Disc", "Wire Recording", "Cylinder", "Pathé Disc", "Elcaset", "PlayTape",
+]);
+/** A format value worth offering as a chip (not a medium — the medium is fixed). */
+export function isFormatChip(v: string): boolean {
+  return !OTHER_MEDIA.has(v);
+}
+/** Is a release with this format string (or list) on vinyl? */
+export function isVinyl(format: string | string[]): boolean {
+  const parts = Array.isArray(format) ? format : format.split(/,\s*|\s*\+\s*/);
+  return parts.some((p) => /(^|×)Vinyl$/.test(p.trim()));
+}
