@@ -375,6 +375,16 @@ export class DiscogsClient {
     );
   }
 
+  /** One page of releases whose barcode looks like this. Discogs matches barcodes
+   *  loosely (as words), so callers check the returned `barcode` list exactly. */
+  async searchBarcode(barcode: string, tokens: DiscogsOAuthTokens, page = 1): Promise<DiscogsBarcodeSearch> {
+    return this.authenticatedRequest<DiscogsBarcodeSearch>(
+      "GET",
+      `/database/search?type=release&per_page=100&page=${page}&barcode=${encodeURIComponent(barcode)}`,
+      tokens
+    );
+  }
+
   async getMaster(masterId: number, tokens: DiscogsOAuthTokens): Promise<DiscogsMaster> {
     return this.authenticatedRequest<DiscogsMaster>("GET", `/masters/${masterId}`, tokens);
   }
@@ -457,6 +467,24 @@ export interface DiscogsSearchResponse {
   }>;
 }
 
+export interface DiscogsBarcodeSearch {
+  pagination: { page: number; pages: number; items: number };
+  results: Array<{
+    id: number;
+    master_id?: number;
+    title: string;
+    country?: string;
+    year?: string;
+    label?: string[];
+    catno?: string;
+    format?: string[];
+    thumb?: string;
+    cover_image?: string;
+    barcode?: string[];
+    community?: { have?: number };
+  }>;
+}
+
 export interface DiscogsMaster {
   id: number;
   title: string;
@@ -498,6 +526,6 @@ export interface DiscogsReleaseFull {
   formats?: { name: string; qty: string; text?: string; descriptions?: string[] }[];
   identifiers?: { type: string; value: string; description?: string }[];
   companies?: { name: string; entity_type_name: string }[];
-  images?: { uri: string; uri150?: string; type: string }[];
+  images?: { uri: string; uri150?: string; type: string; width?: number; height?: number }[];
   community?: { have?: number; want?: number };
 }

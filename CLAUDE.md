@@ -71,6 +71,24 @@ From "I'm holding a copy of this" to the exact Discogs release, in your collecti
   user's collection — never a username from the request, so browsing a friend's
   collection cannot add to theirs. It checks for existing copies first (409) and
   adds another only when asked. The landing page says so.
+- **Barcodes** (`barcode-scanner.tsx`, `/api/pressings/barcode`). The camera
+  uses the native `BarcodeDetector` where it exists (Android Chrome) and ZXing
+  (`@zxing/browser`, dynamically imported) elsewhere — iPhones need ZXing. A
+  read must pass the EAN/UPC check digit and be seen twice running. Discogs'
+  `barcode=` search matches loosely and the digits and the printed form
+  (`0 77774 64462 4`) return different sets, so the route asks both, with and
+  without UPC's leading 0, and keeps only releases whose `barcode` list contains
+  exactly those digits. One album → straight in; the facet chips then narrow the
+  barcode list **in the browser** (no versions call). 8–14 digits typed in the
+  search box are treated as a barcode; 3–7 as a master id.
+- **Photos** (`pressing-viewer.tsx`). `compact()` keeps every release image
+  (600px is the most the API gives). The viewer is one continuous strip — swipe
+  past a pressing's last photo onto the next pressing's first, up/down jumps a
+  pressing, pinch/double-tap zooms — and loads details lazily as you go, so it
+  works on lists too long to load up front. "Not this one" rules a pressing out
+  (client state; it also drops out of the AI guide). Overlays are portalled to
+  `<body>`: an ancestor became the containing block for `fixed` and the page
+  showed through at the top.
 
 
 ## The social app (Phase 1) — log, rate and rank albums

@@ -16,6 +16,8 @@ export interface PressingDetail {
   companies: string[];    // "Pressed By: EMI Hayes"
   notes: string;
   thumb?: string;
+  /** Every photo on the release page — labels, sleeve, runouts — in Discogs' order. */
+  images: { full: string; thumb: string; w?: number; h?: number }[];
   have?: number;
   want?: number;
 }
@@ -39,3 +41,24 @@ export function runoutMatches(p: PressingDetail, query: string): boolean {
 
 export const MAX_DETAILS = 60;   // details loaded per narrowed set
 export const MAX_IDENTIFY = 40;  // pressings sent to Claude in one guide
+
+// A barcode as scanned or typed: digits only. UPC-A is 12 digits and is very
+// often read as EAN-13 with a leading 0, and Discogs pages carry either.
+export function barcodeDigits(s: string): string {
+  return s.replace(/\D+/g, "");
+}
+
+/** Is this what somebody would type for a barcode (rather than a master id)? */
+export function looksLikeBarcode(s: string): boolean {
+  const t = s.trim();
+  return /^[\d\s-]+$/.test(t) && barcodeDigits(t).length >= 8 && barcodeDigits(t).length <= 14;
+}
+
+/** The same code, with and without the leading 0 that turns UPC-A into EAN-13. */
+export function barcodeVariants(code: string): string[] {
+  const d = barcodeDigits(code);
+  const out = new Set([d]);
+  if (d.length === 13 && d.startsWith("0")) out.add(d.slice(1));
+  if (d.length === 12) out.add("0" + d);
+  return Array.from(out);
+}

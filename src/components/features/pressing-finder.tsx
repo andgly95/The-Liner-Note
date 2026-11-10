@@ -10,6 +10,10 @@
 //      Discogs call apiece, paced) and match the runout you can read.
 //   4. Ask Claude how to tell the rest apart; every pressing it names is a
 //      button that adds it to your collection.
+//
+// Two shortcuts: scan the sleeve's barcode, which jumps straight to the few
+// releases that carry it; and flick through every photo of what is left,
+// ruling pressings out by eye ("that's not my label").
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -28,8 +32,16 @@ import {
   ScanLine,
   ChevronDown,
   Square,
+  Camera,
+  Images,
+  Barcode,
+  Ban,
 } from "lucide-react";
-import { MAX_DETAILS, MAX_IDENTIFY, normalizeRunout, runoutMatches, type PressingDetail } from "@/lib/pressing";
+import {
+  MAX_DETAILS, MAX_IDENTIFY, normalizeRunout, runoutMatches, looksLikeBarcode, barcodeDigits, type PressingDetail,
+} from "@/lib/pressing";
+import { BarcodeScanner } from "./barcode-scanner";
+import { PressingViewer } from "./pressing-viewer";
 
 type FilterKey = "format" | "released" | "country" | "label";
 const FILTER_KEYS: { key: FilterKey; label: string; limit: number; order: "count" | "value" }[] = [
@@ -48,6 +60,8 @@ interface VersionsData {
   available: Record<string, Record<string, number>>;
   versions: Version[];
 }
+interface BarcodeMaster extends MasterHit { releases: Version[] }
+interface BarcodeResult { code: string; masters: BarcodeMaster[]; loose: (Version & { title: string })[] }
 type AddState = "adding" | "added" | { already: number } | "error";
 
 interface PressingFinderProps {
@@ -81,11 +95,19 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const [adds, setAdds] = useState<Record<number, AddState>>({});
   const [openNotes, setOpenNotes] = useState<Set<number>>(new Set());
 
+  const [scanning, setScanning] = useState(false);
+  const [barcodeResult, setBarcodeResult] = useState<BarcodeResult | null>(null);
+  // While set, the list is exactly the releases carrying this barcode.
+  const [barcode, setBarcode] = useState<{ code: string; versions: Version[] } | null>(null);
+  const [ruledOut, setRuledOut] = useState<Set<number>>(new Set());
+  const [viewer, setViewer] = useState<{ id: number; image?: number } | null>(null);
+
   /* ── 1. find the album ──────────────────────────────────────────────── */
 
   const search = useCallback(async () => {
     const q = query.trim();
     if (!q) return;
+    if (looksLikeBarcode(q)) return lookupBarcode(q);
     setSearching(true);
     setSearchNote(null);
     try {
@@ -105,8 +127,41 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const pickMaster = (m: MasterHit) => {
+  const lookupBarcode = useCallback(async (raw: string) => {
+    const code = barcodeDigits(raw);
+    setScanning(false);
+    setQuery(code);
+    setSearching(true);
+    setSearchNote(null);
+    setHits(null);
+    setBarcodeResult(null);
+    try {
+      const res = await fetch(`/api/pressings/barcode?code=${code}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Barcode lookup failed");
+      const r = body as BarcodeResult;
+      if (!r.masters.length && !r.loose.length) {
+        setSearchNote(`No release on Discogs lists the barcode ${code}. Records from before the 1980s rarely had one — try the artist and album instead.`);
+        setHits([]);
+        return;
+      }
+      // One album: straight in, already narrowed to the releases with this code.
+      if (r.masters.length === 1 && !r.loose.length) return pickMaster(r.masters[0], { code, versions: r.masters[0].releases });
+      setBarcodeResult(r);
+    } catch (e) {
+      setSearchNote(e instanceof Error ? e.message : "Barcode lookup failed");
+      setHits([]);
+    } finally {
+      setSearching(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pickMaster = (m: MasterHit, bc: { code: string; versions: Version[] } | null = null) => {
     setMaster(m);
+    setBarcode(bc);
+    setBarcodeResult(null);
+    setRuledOut(new Set());
     setFilters(emptyFilters());
     setRunout("");
     setGuide("");
@@ -125,7 +180,8 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   /* ── 2. narrow with facets ─────────────────────────────────────────── */
 
   useEffect(() => {
-    if (!master) return;
+    // Barcode mode narrows its own short list in the browser (below).
+    if (!master || barcode) return;
     const ctrl = new AbortController();
     const qs = new URLSearchParams({ master: String(master.id) });
     for (const { key } of FILTER_KEYS) for (const v of filters[key]) qs.append(key, v);
@@ -148,7 +204,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
       })
       .finally(() => setLoadingVersions(false));
     return () => ctrl.abort();
-  }, [master, filters]);
+  }, [master, filters, barcode]);
 
   const toggleFilter = (key: FilterKey, value: string) => {
     setGuide("");
@@ -166,8 +222,32 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     return i === -1 ? FORMAT_FIRST.length : i;
   };
 
+  // With a barcode the list is short and already in hand, so the same chips are
+  // worked out here instead of asking Discogs. Values within one kind AND
+  // together, as Discogs' own filters do.
+  const valuesOf = (v: Version, key: FilterKey): string[] =>
+    key === "format" ? v.format.split(/,\s*/).filter(Boolean)
+      : key === "released" ? [v.released?.slice(0, 4)].filter(Boolean)
+        : key === "country" ? [v.country].filter(Boolean)
+          : [v.label].filter(Boolean);
+  const barcodeMatches = useMemo(() => {
+    if (!barcode) return [];
+    return barcode.versions.filter((v) =>
+      FILTER_KEYS.every(({ key }) => filters[key].every((want) => valuesOf(v, key).includes(want)))
+    );
+  }, [barcode, filters]);
+  const available = useMemo(() => {
+    if (!barcode) return data?.available ?? {};
+    const out: Record<string, Record<string, number>> = {};
+    for (const { key } of FILTER_KEYS) {
+      out[key] = {};
+      for (const v of barcodeMatches) for (const val of valuesOf(v, key)) out[key][val] = (out[key][val] ?? 0) + 1;
+    }
+    return out;
+  }, [barcode, barcodeMatches, data]);
+
   const facetValues = (key: FilterKey, limit: number, order: "count" | "value") => {
-    const avail = Object.entries(data?.available?.[key] ?? {});
+    const avail = Object.entries(available[key] ?? {});
     const chosen = filters[key];
     const rest = avail
       .filter(([v]) => !chosen.includes(v))
@@ -184,9 +264,10 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
 
   /* ── 3. runouts ────────────────────────────────────────────────────── */
 
-  const versions = useMemo(() => data?.versions ?? [], [data]);
+  const versions = useMemo(() => (barcode ? barcodeMatches : data?.versions ?? []), [barcode, barcodeMatches, data]);
   const missing = versions.filter((v) => !details.has(v.id));
-  const canLoadDetails = versions.length > 0 && versions.length <= MAX_DETAILS && data?.total === versions.length;
+  const canLoadDetails =
+    versions.length > 0 && versions.length <= MAX_DETAILS && (!!barcode || data?.total === versions.length);
   const allLoaded = versions.length > 0 && missing.length === 0;
 
   const loadDetails = async () => {
@@ -219,18 +300,56 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   };
 
   const shown = useMemo(() => {
-    if (!runout.trim()) return versions;
-    return versions.filter((v) => {
+    const standing = versions.filter((v) => !ruledOut.has(v.id));
+    if (!runout.trim()) return standing;
+    return standing.filter((v) => {
       const d = details.get(v.id);
       return d ? runoutMatches(d, runout) : false;
     });
-  }, [versions, details, runout]);
+  }, [versions, details, runout, ruledOut]);
+
+  // The photo viewer loads a pressing's detail as you reach it, so it works on
+  // lists too long to load up front. One request in flight per release.
+  const inFlight = useRef(new Set<number>());
+  const need = useCallback((ids: number[]) => {
+    const todo = ids.filter((id) => !inFlight.current.has(id));
+    if (!todo.length) return;
+    todo.forEach((id) => inFlight.current.add(id));
+    fetch("/api/pressings/details", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: todo }),
+    })
+      .then((r) => r.json())
+      .then((body) => {
+        if (!Array.isArray(body.details)) return;
+        setDetails((prev) => {
+          const next = new Map(prev);
+          for (const d of body.details as PressingDetail[]) next.set(d.id, d);
+          return next;
+        });
+      })
+      .catch(() => {})
+      .finally(() => todo.forEach((id) => inFlight.current.delete(id)));
+  }, []);
+
+  const setOut = useCallback((id: number, out: boolean) => {
+    setGuide("");
+    setRuledOut((s) => {
+      const n = new Set(s);
+      if (out) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+  }, []);
 
   /* ── 4. the guide ──────────────────────────────────────────────────── */
 
   const filterSummary = [
     ...FILTER_KEYS.flatMap(({ key, label }) => (filters[key].length ? [`${label}: ${filters[key].join(" + ")}`] : [])),
+    ...(barcode ? [`Barcode ${barcode.code}`] : []),
     ...(runout.trim() ? [`Runout contains "${runout.trim()}"`] : []),
+    ...(ruledOut.size ? [`${ruledOut.size} ruled out from photos`] : []),
   ].join("; ");
 
   const identify = async () => {
@@ -322,8 +441,8 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
             Which pressing is this?
           </CardTitle>
           <CardDescription>
-            Find the album, narrow every version Discogs knows about down to yours — by format, year, country,
-            label and runout — and add the exact one to your collection.
+            Scan the barcode or find the album, narrow every version Discogs knows about down to yours — by
+            format, year, country, label, runout and photos — and add the exact one to your collection.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -339,7 +458,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Artist and album, or a Discogs link"
+                placeholder="Album, barcode, or a Discogs link"
                 enterKeyHint="search"
                 className="w-full pl-9 pr-3 py-2 text-sm rounded-full border border-input bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
@@ -348,10 +467,52 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : "Find"}
             </Button>
           </form>
+          <Button variant="outline" className="w-full rounded-full" onClick={() => setScanning(true)}>
+            <Camera className="w-4 h-4 mr-2" /> Scan a barcode
+          </Button>
+          {barcodeResult && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Barcode <span className="font-mono text-foreground">{barcodeResult.code}</span> is on releases of{" "}
+                {barcodeResult.masters.length + barcodeResult.loose.length === 1 ? "this" : "these"}:
+              </p>
+              <ul className="divide-y rounded-lg border">
+                {barcodeResult.masters.map((m) => (
+                  <li key={m.id}>
+                    <button
+                      onClick={() => pickMaster(m, { code: barcodeResult.code, versions: m.releases })}
+                      className="w-full flex items-center gap-3 p-2.5 text-left hover:bg-accent"
+                    >
+                      <Cover src={m.thumb} size={44} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium truncate">{m.title}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {m.releases.length} {m.releases.length === 1 ? "pressing carries" : "pressings carry"} it
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+                {barcodeResult.loose.map((r) => (
+                  <li key={r.id} className="flex items-center gap-3 p-2.5">
+                    <Cover src={r.thumb} size={44} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium truncate">{r.title}</span>
+                      <span className="block text-xs text-muted-foreground truncate">
+                        {r.country || "—"} · {r.released || "?"} · {r.label} {r.catno} — the only version
+                      </span>
+                    </span>
+                    <AddButton id={r.id} compact />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {searchNote && <p className="text-sm text-muted-foreground">{searchNote}</p>}
           {hits && hits.length === 0 && !searchNote && (
             <p className="text-sm text-muted-foreground">Nothing on Discogs by that name.</p>
           )}
+          {scanning && <BarcodeScanner onCode={lookupBarcode} onClose={() => setScanning(false)} />}
           {hits && hits.length > 0 && (
             <ul className="divide-y rounded-lg border">
               {hits.map((h) => (
@@ -372,7 +533,8 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     );
   }
 
-  const remaining = runout.trim() ? shown.length : data?.total ?? 0;
+  const remaining = barcode || runout.trim() || ruledOut.size ? shown.length : data?.total ?? 0;
+  const withPhotos = shown.filter((v) => (details.get(v.id)?.images.length ?? 1) > 0);
 
   return (
     <div id="pressing-finder" className="space-y-4 scroll-mt-16">
@@ -392,11 +554,30 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => { setMaster(null); setData(null); setGuide(""); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setMaster(null); setData(null); setGuide(""); setBarcode(null); setRuledOut(new Set()); }}>
             Change
           </Button>
         </CardContent>
       </Card>
+
+      {/* Narrowed by barcode: the facets would only offer what the code already decided */}
+      {barcode && (
+        <Card>
+          <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+            <Barcode className="w-5 h-5 text-primary shrink-0" />
+            <div className="min-w-0 flex-1 text-sm">
+              <div className="font-medium">
+                {barcode.versions.length} {barcode.versions.length === 1 ? "release has" : "releases have"} barcode{" "}
+                <span className="font-mono">{barcode.code}</span>
+              </div>
+              <div className="text-muted-foreground text-xs">Only the releases that print this code. Narrow further below.</div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(emptyFilters()); setRuledOut(new Set()); setGuide(""); }}>
+              All versions
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Facets */}
       <Card>
@@ -555,9 +736,38 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
         </Card>
       )}
 
+      {/* Look, don't read: every photo of what is left, one swipe apart */}
+      {shown.length > 0 && (
+        <Button variant="outline" className="w-full" onClick={() => setViewer({ id: withPhotos[0]?.id ?? shown[0].id })}>
+          <Images className="w-4 h-4 mr-2" />
+          Flick through the photos of {shown.length === 1 ? "this pressing" : `these ${shown.length}`}
+        </Button>
+      )}
+      {ruledOut.size > 0 && (
+        <p className="text-sm text-muted-foreground px-1 flex items-center gap-2">
+          <Ban className="w-3.5 h-3.5" />
+          {ruledOut.size} ruled out by eye
+          <button className="text-primary font-medium" onClick={() => { setRuledOut(new Set()); setGuide(""); }}>
+            Bring them back
+          </button>
+        </p>
+      )}
+      {viewer && (
+        <PressingViewer
+          pressings={shown}
+          start={viewer}
+          details={details}
+          need={need}
+          ruledOut={ruledOut}
+          onRuleOut={setOut}
+          renderAdd={(id) => <AddButton id={id} />}
+          onClose={() => setViewer(null)}
+        />
+      )}
+
       {/* The pressings */}
       <div className="space-y-2">
-        {data && data.total > versions.length && (
+        {!barcode && data && data.total > versions.length && (
           <p className="text-xs text-muted-foreground px-1">
             Showing {versions.length} of {data.total.toLocaleString()} — the filters above narrow it.
           </p>
@@ -588,6 +798,22 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
                     )}
                   </div>
                 </div>
+
+                {d && d.images.length > 0 && (
+                  <div className="mt-2.5 -mx-3 px-3 sm:-mx-4 sm:px-4 flex gap-1.5 overflow-x-auto no-scrollbar">
+                    {d.images.map((im, i) => (
+                      <button
+                        key={im.thumb + i}
+                        onClick={() => setViewer({ id: v.id, image: i })}
+                        className="shrink-0 w-16 h-16 rounded overflow-hidden bg-muted ring-1 ring-black/5"
+                        aria-label={`Photo ${i + 1}`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={im.thumb} alt="" loading="lazy" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {d && d.runouts.length > 0 && (
                   <div className="mt-2.5 rounded-md bg-muted/60 px-2.5 py-2 font-mono text-xs space-y-0.5">
@@ -628,7 +854,12 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
                   >
                     Discogs <ExternalLink className="w-3 h-3" />
                   </a>
-                  <AddButton id={v.id} />
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" className="h-8 text-muted-foreground" onClick={() => setOut(v.id, true)}>
+                      Not this one
+                    </Button>
+                    <AddButton id={v.id} />
+                  </div>
                 </div>
               </CardContent>
             </Card>

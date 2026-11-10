@@ -14,7 +14,8 @@ const cache = new Map<number, { at: number; detail: PressingDetail }>();
 function cached(id: number): PressingDetail | undefined {
   const hit = cache.get(id);
   if (!hit) return undefined;
-  if (Date.now() - hit.at > DAY) {
+  // Entries from before photos were kept have no `images`: treat as a miss.
+  if (Date.now() - hit.at > DAY || !hit.detail.images) {
     cache.delete(id);
     return undefined;
   }
@@ -54,6 +55,9 @@ export function compact(r: DiscogsReleaseFull): PressingDetail {
     companies: (r.companies ?? []).map((c) => `${c.entity_type_name}: ${c.name}`),
     notes: (r.notes ?? "").trim().slice(0, 2500),
     thumb: r.images?.[0]?.uri150 || r.images?.[0]?.uri,
+    images: (r.images ?? [])
+      .filter((i) => /^https:\/\//.test(i.uri || ""))
+      .map((i) => ({ full: i.uri, thumb: i.uri150 || i.uri, w: i.width, h: i.height })),
     have: r.community?.have,
     want: r.community?.want,
   };
