@@ -10,15 +10,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MeProvider, useMe } from "./me";
 import { SignInButtons } from "./sign-in";
 
-export function Shell({ children }: { children: React.ReactNode }) {
+export function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
     <MeProvider>
-      <Frame>{children}</Frame>
+      <Frame wide={wide}>{children}</Frame>
     </MeProvider>
   );
 }
 
-function Frame({ children }: { children: React.ReactNode }) {
+function Frame({ children, wide }: { children: React.ReactNode; wide: boolean }) {
+  const width = wide ? "max-w-6xl" : "max-w-3xl";
   const { me, loading } = useMe();
   const path = usePathname();
   const [signIn, setSignIn] = useState(false);
@@ -30,7 +31,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-        <div className="mx-auto max-w-3xl px-4 h-14 flex items-center justify-between gap-3">
+        <div className={`mx-auto ${width} px-4 h-14 flex items-center justify-between gap-3`}>
           <Link href="/home" className="flex items-center gap-2.5 min-w-0">
             <div className="vinyl-record w-7 h-7 shrink-0" />
             <span className="font-display text-lg font-semibold tracking-tight whitespace-nowrap">The Liner Note</span>
@@ -51,7 +52,7 @@ function Frame({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pt-4 pb-28 md:pb-12">{children}</main>
+      <main className={`mx-auto ${width} px-4 pt-4 pb-28 md:pb-12`}>{children}</main>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t bg-background/95 backdrop-blur pb-safe" aria-label="Sections">
         <div className="grid grid-cols-3">
