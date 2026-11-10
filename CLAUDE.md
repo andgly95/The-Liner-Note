@@ -61,6 +61,11 @@ From "I'm holding a copy of this" to the exact Discogs release, in your collecti
   counts, so narrowing is one request per tap. Runouts and notes exist only on
   `/releases/{id}`, one request each, so they load only once ≤ `MAX_DETAILS` (60)
   are left, paced at 1.1s by `pressing-server.ts` and cached in-process for a day.
+- **Format chips AND together** — that is Discogs' own API behaviour (Vinyl +
+  Mono on Abbey Road: 19 mono → 12 mono vinyl), unlike the website's OR. Every
+  album starts at Format: Vinyl ("Always vinyl", per device in `ln-vinyl-only`),
+  except a barcode only CDs carry. Country/year/label need no single-select:
+  once one is chosen, Discogs' facets offer only values inside it.
 - **Runout matching ignores case, spaces and dashes** (`normalizeRunout`) —
   "xex 709 1" finds "XEX 709 - 1".
 - **The guide** (`/api/pressings/identify`, Opus 5.5) reads runouts, labels,

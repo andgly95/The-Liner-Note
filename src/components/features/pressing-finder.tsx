@@ -70,6 +70,7 @@ interface PressingFinderProps {
 }
 
 const emptyFilters = (): Record<FilterKey, string[]> => ({ format: [], released: [], country: [], label: [] });
+const VINYL_KEY = "ln-vinyl-only";
 
 export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const [query, setQuery] = useState("");
@@ -94,6 +95,33 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
 
   const [adds, setAdds] = useState<Record<number, AddState>>({});
   const [openNotes, setOpenNotes] = useState<Set<number>>(new Set());
+
+  // Most people here are holding a record, not a CD: start every album at
+  // Format: Vinyl. Remembered per device. Format chips AND together (Discogs
+  // does that server-side), so Vinyl + Mono is mono vinyl, not "either".
+  const [vinylOnly, setVinylOnly] = useState(true);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(VINYL_KEY) === "0") setVinylOnly(false);
+    } catch {}
+  }, []);
+  // A barcode that only CDs carry would otherwise come up empty.
+  const startFilters = (bc: { versions: Version[] } | null, vinyl = vinylOnly) => {
+    const f = emptyFilters();
+    if (vinyl && (!bc || bc.versions.some((v) => /\bVinyl\b/.test(v.format)))) f.format = ["Vinyl"];
+    return f;
+  };
+  const setAlwaysVinyl = (on: boolean) => {
+    setVinylOnly(on);
+    try {
+      localStorage.setItem(VINYL_KEY, on ? "1" : "0");
+    } catch {}
+    setGuide("");
+    setFilters((f) => ({
+      ...f,
+      format: on ? (f.format.includes("Vinyl") ? f.format : ["Vinyl", ...f.format]) : f.format.filter((v) => v !== "Vinyl"),
+    }));
+  };
 
   const [scanning, setScanning] = useState(false);
   const [barcodeResult, setBarcodeResult] = useState<BarcodeResult | null>(null);
@@ -162,7 +190,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     setBarcode(bc);
     setBarcodeResult(null);
     setRuledOut(new Set());
-    setFilters(emptyFilters());
+    setFilters(startFilters(bc));
     setRunout("");
     setGuide("");
     setHits(null);
@@ -572,7 +600,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               </div>
               <div className="text-muted-foreground text-xs">Only the releases that print this code. Narrow further below.</div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(emptyFilters()); setRuledOut(new Set()); setGuide(""); }}>
+            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(startFilters(null)); setRuledOut(new Set()); setGuide(""); }}>
               All versions
             </Button>
           </CardContent>
@@ -587,7 +615,28 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
             if (!chosen.length && !rest.length) return null;
             return (
               <div key={key}>
-                <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">{label}</div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {label}
+                    {key === "format" && filters.format.length > 1 && (
+                      <span className="normal-case tracking-normal font-normal"> · all of these</span>
+                    )}
+                  </span>
+                  {key === "format" && (
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                      Always vinyl
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={vinylOnly}
+                        onClick={() => setAlwaysVinyl(!vinylOnly)}
+                        className={`relative w-9 h-5 rounded-full transition-colors ${vinylOnly ? "bg-primary" : "bg-muted-foreground/30"}`}
+                      >
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background shadow transition-transform ${vinylOnly ? "translate-x-4" : ""}`} />
+                      </button>
+                    </label>
+                  )}
+                </div>
                 <div className="-mx-3 px-3 sm:-mx-4 sm:px-4 scroll-px-3 flex gap-1.5 overflow-x-auto no-scrollbar">
                   {chosen.map((v) => (
                     <button
@@ -612,8 +661,8 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               </div>
             );
           })}
-          {filterSummary && (
-            <button className="text-sm text-primary font-medium" onClick={() => { setFilters(emptyFilters()); setRunout(""); setGuide(""); }}>
+          {(runout.trim() || JSON.stringify(filters) !== JSON.stringify(startFilters(barcode))) && (
+            <button className="text-sm text-primary font-medium" onClick={() => { setFilters(startFilters(barcode)); setRunout(""); setGuide(""); }}>
               Clear all filters
             </button>
           )}
