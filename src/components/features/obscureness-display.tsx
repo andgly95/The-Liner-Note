@@ -102,7 +102,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
             </p>
             <Button onClick={handleAnalyze} size="lg">
               <Telescope className="w-4 h-4 mr-2" />
-              Analyze Obscureness
+              Analyze obscureness
             </Button>
           </div>
         )}
@@ -126,7 +126,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
             </p>
             <Button onClick={handleAnalyze} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Try again
             </Button>
           </div>
         )}
@@ -136,8 +136,8 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
             <div className="space-y-6">
               {/* Score */}
               <div className="bg-gradient-to-r from-primary/10 to-chart-2/10 rounded-lg p-6 text-center">
-                <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
-                  Your Obscureness Score
+                <p className="section-label mb-2">
+                  Your obscureness score
                 </p>
                 <div className="text-5xl font-bold mb-2">
                   {cached.overallScore.toFixed(1)}
@@ -164,7 +164,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingDown className="w-4 h-4 text-chart-4" />
-                    <h4 className="font-semibold">Most Mainstream</h4>
+                    <h4 className="font-semibold">Most mainstream</h4>
                   </div>
                   <div className="space-y-2">
                     {cached.mostMainstream.length === 0 ? (
@@ -181,7 +181,7 @@ export function ObscurenessDisplay({ collectionString, username, isReady }: Obsc
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp className="w-4 h-4 text-chart-2" />
-                    <h4 className="font-semibold">Most Obscure</h4>
+                    <h4 className="font-semibold">Most obscure</h4>
                   </div>
                   <div className="space-y-2">
                     {cached.mostObscure.length === 0 ? (

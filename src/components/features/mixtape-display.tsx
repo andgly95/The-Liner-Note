@@ -154,7 +154,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ListMusic className="w-5 h-5 text-primary" />
-            The Mixtape
+            The mixtape
           </CardTitle>
           <CardDescription>Loading your collection...</CardDescription>
         </CardHeader>
@@ -172,7 +172,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ListMusic className="w-5 h-5 text-primary" />
-          The Mixtape
+          The mixtape
         </CardTitle>
         <CardDescription>
           Sequenced Side A / Side B mixtapes from your collection, with explained transitions.
@@ -276,7 +276,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
             </p>
             <Button onClick={reset} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Try again
             </Button>
           </div>
         )}
@@ -286,7 +286,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
             <div className="space-y-6">
               {/* Header */}
               <div className="bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-lg p-6">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                <div className="section-label mb-1">
                   For: {lastTheme}
                 </div>
                 <h3 className="text-2xl font-bold mb-3">{result.title}</h3>
@@ -324,7 +324,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
 
               {/* Side break */}
               <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/30 p-4 text-center">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                <div className="section-label mb-1">
                   Side break — flip the tape
                 </div>
                 <p className="text-sm italic">{result.sideBreak}</p>
@@ -363,7 +363,7 @@ export function MixtapeDisplay({ items, isReady }: MixtapeDisplayProps) {
 
               {/* Closing */}
               <div className="bg-muted/40 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                <div className="flex items-center gap-2 section-label mb-1">
                   <Music className="w-3 h-3" />
                   And we&apos;re out
                 </div>

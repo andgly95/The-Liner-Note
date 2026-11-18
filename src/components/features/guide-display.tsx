@@ -226,7 +226,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
-            Listening Guides
+            Listening guides
           </CardTitle>
           <CardDescription>Loading your collection...</CardDescription>
         </CardHeader>
@@ -246,7 +246,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
-            Listening Guides
+            Listening guides
           </CardTitle>
           <CardDescription>
             {generatingFor
@@ -278,7 +278,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
-            Listening Guides
+            Listening guides
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -344,7 +344,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
           <ScrollArea className="h-[600px]">
             <div className="space-y-6 pr-3">
               <div>
-                <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                <h4 className="section-label mb-2">
                   About the album
                 </h4>
                 <div className="text-sm whitespace-pre-wrap leading-relaxed">
@@ -355,7 +355,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
               <Separator />
 
               <div>
-                <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+                <h4 className="section-label mb-3">
                   Track-by-track
                 </h4>
                 <div className="space-y-4">
@@ -378,7 +378,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
               <Separator />
 
               <div>
-                <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                <h4 className="section-label mb-2">
                   Closing
                 </h4>
                 <div className="text-sm whitespace-pre-wrap leading-relaxed">
@@ -496,7 +496,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
                         </div>
                       </div>
                       {has && (
-                        <span className="text-[10px] uppercase tracking-wider text-primary shrink-0">
+                        <span className="text-[11px] font-semibold text-primary shrink-0">
                           Saved
                         </span>
                       )}
@@ -519,7 +519,7 @@ export function GuideDisplay({ items, isReady }: GuideDisplayProps) {
           <div>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-primary" />
-              Listening Guides
+              Listening guides
             </CardTitle>
             <CardDescription>
               Track-by-track guides, written by Claude. Generated once, saved forever (in this browser).

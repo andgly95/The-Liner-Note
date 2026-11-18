@@ -59,7 +59,7 @@ export function MoodDisplay({ collectionString, isReady }: MoodDisplayProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Headphones className="w-5 h-5 text-primary" />
-            The Mood
+            The mood
           </CardTitle>
           <CardDescription>Loading your collection...</CardDescription>
         </CardHeader>
@@ -77,7 +77,7 @@ export function MoodDisplay({ collectionString, isReady }: MoodDisplayProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Headphones className="w-5 h-5 text-primary" />
-          The Mood
+          The mood
         </CardTitle>
         <CardDescription>
           Tell me how you&apos;re feeling and I&apos;ll pick 3 records from your shelf.
@@ -172,7 +172,7 @@ export function MoodDisplay({ collectionString, isReady }: MoodDisplayProps) {
             </p>
             <Button onClick={resetToInput} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Try again
             </Button>
           </div>
         )}

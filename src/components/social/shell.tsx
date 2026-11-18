@@ -41,7 +41,7 @@ export function HeaderActions({ children }: { children: React.ReactNode }) {
 // back) from "opened from a link" (there's nothing to go back to: go Home).
 let pagesSeen = 0;
 
-function BackButton() {
+export function BackButton() {
   const router = useRouter();
   return (
     <button

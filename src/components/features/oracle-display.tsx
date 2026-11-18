@@ -62,7 +62,7 @@ export function OracleDisplay({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-chart-2" />
-            The Oracle
+            The oracle
           </CardTitle>
           <CardDescription>Loading your collection to predict the future...</CardDescription>
         </CardHeader>
@@ -82,7 +82,7 @@ export function OracleDisplay({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-chart-2" />
-          The Oracle
+          The oracle
         </CardTitle>
         <CardDescription>
           Predict your next purchases and discover albums you don&apos;t know you want yet.
@@ -92,14 +92,14 @@ export function OracleDisplay({
         {!hasPrerequisites && !cached && !isLoading && (
           <div className="bg-muted/50 rounded-lg p-6 text-center">
             <Lightbulb className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h4 className="font-medium mb-2">Pro Tip</h4>
+            <h4 className="font-medium mb-2">Tip</h4>
             <p className="text-sm text-muted-foreground mb-4">
-              For the best predictions, run the Gap Filler analysis first. The Oracle uses those
+              For the best predictions, run the Gap filler analysis first. The Oracle uses those
               results along with your wantlist to make smarter recommendations.
             </p>
             <Button onClick={handleAnalyze} variant="outline">
               <Sparkles className="w-4 h-4 mr-2" />
-              Run Oracle Anyway
+              Run the oracle anyway
             </Button>
           </div>
         )}
@@ -108,12 +108,12 @@ export function OracleDisplay({
           <div className="text-center py-8">
             <p className="text-muted-foreground mb-4">
               Ready to see what&apos;s in your future.
-              {gapFillerResults && " Gap Filler results loaded."}
+              {gapFillerResults && " Gap filler results loaded."}
               {wantlistString && " Wantlist loaded."}
             </p>
             <Button onClick={handleAnalyze} size="lg">
               <Sparkles className="w-4 h-4 mr-2" />
-              Consult The Oracle
+              Consult the oracle
             </Button>
           </div>
         )}
@@ -137,7 +137,7 @@ export function OracleDisplay({
             </p>
             <Button onClick={handleAnalyze} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Try again
             </Button>
           </div>
         )}
@@ -148,7 +148,7 @@ export function OracleDisplay({
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <ShoppingCart className="w-5 h-5 text-chart-4" />
-                  <h4 className="font-semibold">Predicted Next Purchases</h4>
+                  <h4 className="font-semibold">Predicted next purchases</h4>
                 </div>
                 <div className="space-y-3">
                   {cached.likelyPurchases.map((purchase, i) => (
@@ -163,7 +163,7 @@ export function OracleDisplay({
                       </div>
                       <p className="text-sm text-muted-foreground">{purchase.reason}</p>
                       <span className="inline-block mt-2 text-xs px-2 py-1 bg-chart-4/10 text-chart-4 dark:text-chart-4 rounded">
-                        {purchase.source === "wantlist" ? "From Wantlist" : "Gap Filler"}
+                        {purchase.source === "wantlist" ? "From your wantlist" : "Gap filler"}
                       </span>
                     </div>
                   ))}
@@ -200,7 +200,7 @@ export function OracleDisplay({
               <div className="pt-4">
                 <Button onClick={handleAnalyze} variant="outline" className="w-full">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Get New Predictions
+                  Get new predictions
                 </Button>
               </div>
             </div>

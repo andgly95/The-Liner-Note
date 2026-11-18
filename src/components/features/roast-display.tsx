@@ -37,7 +37,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-destructive" />
-            The Roast
+            The roast
           </CardTitle>
           <CardDescription>
             Loading your collection before we can roast it...
@@ -57,7 +57,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Flame className="w-5 h-5 text-destructive" />
-          The Roast
+          The roast
         </CardTitle>
         <CardDescription>
           Let AI analyze your collection and deliver a personalized, humorous roast of your taste.
@@ -71,7 +71,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
             </p>
             <Button onClick={handleAnalyze} size="lg">
               <Flame className="w-4 h-4 mr-2" />
-              Roast My Collection
+              Roast my collection
             </Button>
           </div>
         )}
@@ -95,7 +95,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
             </p>
             <Button onClick={handleAnalyze} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Try again
             </Button>
           </div>
         )}
@@ -104,8 +104,8 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
           <ScrollArea className="h-[500px]">
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-destructive/10 to-chart-3/10 rounded-lg p-6 text-center">
-                <p className="text-sm text-muted-foreground uppercase tracking-wider mb-2">
-                  Your Collector Archetype
+                <p className="section-label mb-2">
+                  Your collector archetype
                 </p>
                 <h3 className="text-2xl font-bold text-destructive mb-2">
                   {cached.archetype.title}
@@ -114,7 +114,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">The Roast</h4>
+                <h4 className="font-semibold mb-3">The roast</h4>
                 <div className="prose-roast text-foreground whitespace-pre-wrap">
                   {cached.roast}
                 </div>
@@ -123,7 +123,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
               <Separator />
 
               <div>
-                <h4 className="font-semibold mb-3">Taste Patterns Detected</h4>
+                <h4 className="font-semibold mb-3">Taste patterns</h4>
                 <ul className="space-y-2">
                   {cached.tastePatterns.map((pattern, i) => (
                     <li key={i} className="flex items-start gap-2">
@@ -137,7 +137,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
               <Separator />
 
               <div>
-                <h4 className="font-semibold mb-3">Cliche Alert</h4>
+                <h4 className="font-semibold mb-3">Cliché alert</h4>
                 <ul className="space-y-2">
                   {cached.clicheAlbums.map((album, i) => (
                     <li key={i} className="flex items-start gap-2">
@@ -151,7 +151,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
               <Separator />
 
               <div>
-                <h4 className="font-semibold mb-3">Collection Balance</h4>
+                <h4 className="font-semibold mb-3">Collection balance</h4>
                 <p className="text-muted-foreground mb-2">{cached.valueDistribution.summary}</p>
                 <ul className="space-y-1">
                   {cached.valueDistribution.highlights.map((highlight, i) => (
@@ -165,7 +165,7 @@ export function RoastDisplay({ collectionString, username, isReady }: RoastDispl
               <div className="pt-4">
                 <Button onClick={handleAnalyze} variant="outline" className="w-full">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Get Another Roast
+                  Get another roast
                 </Button>
               </div>
             </div>

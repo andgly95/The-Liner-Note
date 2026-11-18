@@ -175,6 +175,15 @@ rebuilt when the copy's `syncedAt` changes. Used by: the album page's plum
 "Another three"). On your 311 records: 260 of 304 masters link exactly.
 
 
+## Search (design 02)
+
+`/search` (`search-page.tsx`) is its own screen: Home's search pill links to
+it. A back button and the field (clear button, accent ring), results under
+Albums and EPs with the plum "In your collection" chip. The query rides in the
+URL via `history.replaceState` (no navigation per keystroke), so Back from an
+album returns to the same results.
+
+
 ## The album page (redesign step 2)
 
 - Order: a band tinted with the cover's average colour (canvas over the CAA

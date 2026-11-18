@@ -53,7 +53,7 @@ export function GapFillerDisplay({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="w-5 h-5 text-primary" />
-            Gap Filler
+            Gap filler
           </CardTitle>
           <CardDescription>Loading your collection to find missing gems...</CardDescription>
         </CardHeader>
@@ -71,7 +71,7 @@ export function GapFillerDisplay({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Search className="w-5 h-5 text-primary" />
-          Gap Filler
+          Gap filler
         </CardTitle>
         <CardDescription>
           Identify your core artists and discover essential studio albums missing from your collection.
@@ -83,7 +83,7 @@ export function GapFillerDisplay({
             <p className="text-muted-foreground mb-4">Let&apos;s find the gaps in your discographies.</p>
             <Button onClick={handleAnalyze} size="lg">
               <Search className="w-4 h-4 mr-2" />
-              Find Missing Albums
+              Find missing albums
             </Button>
           </div>
         )}
@@ -107,7 +107,7 @@ export function GapFillerDisplay({
             </p>
             <Button onClick={handleAnalyze} variant="outline">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              Try again
             </Button>
           </div>
         )}
@@ -116,7 +116,7 @@ export function GapFillerDisplay({
           <ScrollArea className="h-[500px]">
             <div className="space-y-6">
               <div>
-                <h4 className="font-semibold mb-4">Your Core Artists</h4>
+                <h4 className="font-semibold mb-4">Your core artists</h4>
                 <div className="grid gap-4">
                   {cached.coreArtists.map((artist, i) => (
                     <div key={i} className="bg-muted/50 rounded-lg p-4">
@@ -146,7 +146,7 @@ export function GapFillerDisplay({
               <Separator />
 
               <div>
-                <h4 className="font-semibold mb-4">Critical Missing Albums</h4>
+                <h4 className="font-semibold mb-4">Missing albums</h4>
                 <div className="space-y-4">
                   {cached.missingAlbums.map((album, i) => (
                     <div key={i} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">

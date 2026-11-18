@@ -252,7 +252,7 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Store className="w-5 h-5 text-primary" />
-            The Record Shop
+            The record shop
           </CardTitle>
           <CardDescription>
             Loading your collection before we can chat...
@@ -276,7 +276,7 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
           <div className="min-w-0">
             <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
               <Store className="w-5 h-5 text-primary shrink-0" />
-              The Record Shop
+              The record shop
             </CardTitle>
             <CardDescription className="hidden sm:block mt-1.5">
               Chat with a knowledgeable record shop owner about pressings, editions, and what to add to your collection.
@@ -333,7 +333,7 @@ export function RecordShopChat({ collectionString, wantlistString, isReady }: Re
                 className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="w-3 h-3 mr-1" />
-                Clear All
+                Clear all
               </Button>
             </div>
             <ScrollArea className="flex-1">

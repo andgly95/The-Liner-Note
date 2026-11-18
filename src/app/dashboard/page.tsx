@@ -428,12 +428,13 @@ export default function Dashboard() {
           </div>
           <button
             onClick={() => setMoreOpen(true)}
-            aria-label="More tools"
-            className={`h-11 shrink-0 rounded-full inline-flex items-center justify-center gap-1.5 text-sm font-medium ${
-              inMore ? "bg-foreground text-background px-3.5" : "w-11 bg-secondary text-muted-foreground"
+            aria-label={inMore && active ? `More tools (${active.label} open)` : "More tools"}
+            className={`w-11 h-11 shrink-0 rounded-full inline-flex items-center justify-center ${
+              inMore ? "bg-foreground text-background" : "bg-secondary text-muted-foreground"
             }`}
           >
-            {inMore && active ? <>{<active.icon className="w-4 h-4" />}{active.label}</> : <MoreHorizontal className="w-5 h-5" />}
+            {/* Lit up with the open tool's icon; the tool names itself below. */}
+            {inMore && active ? <active.icon className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
           </button>
         </div>
       </div>
