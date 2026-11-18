@@ -85,6 +85,22 @@ export async function searchAlbums(q: string): Promise<AlbumHit[]> {
     }));
 }
 
+/* ── Discogs masters → release groups ──────────────────────────────────── */
+
+/** The release group MusicBrainz links to this Discogs master, or null when
+ *  none does (many masters have no link yet). Goes through the same 1/s queue. */
+export async function releaseGroupForDiscogsMaster(masterId: number): Promise<string | null> {
+  try {
+    const r = await mb<{ relations?: { "target-type"?: string; "release_group"?: { id: string } }[] }>(
+      `/url?resource=${encodeURIComponent(`https://www.discogs.com/master/${masterId}`)}&inc=release-group-rels`
+    );
+    return r.relations?.find((x) => x.release_group?.id)?.release_group?.id ?? null;
+  } catch (e) {
+    if (e instanceof Error && /MusicBrainz 404/.test(e.message)) return null; // no such URL known
+    throw e;
+  }
+}
+
 /* ── one album, with tracks ──────────────────────────────────────────────── */
 
 export interface Track { key: string; idx: number; disc: number; number: string; title: string; length_ms: number | null }

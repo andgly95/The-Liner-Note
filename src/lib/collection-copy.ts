@@ -45,6 +45,8 @@ export function saveCopy(userId: number, username: string, raw: DiscogsCollectio
        ON CONFLICT(user_id) DO UPDATE SET discogs_username = excluded.discogs_username, items = excluded.items, synced_at = excluded.synced_at`
     )
     .run(userId, username, JSON.stringify(raw), now());
+  // Which albums these records are, for "In your collection" (no tokens needed).
+  import("@/lib/owned").then((m) => m.warmMasterGroups(userId, raw)).catch(() => {});
   if (warming.has(userId)) return;
   warming.add(userId);
   warmMasterYears(mastersOf(raw.map((i) => i.basic_information.master_id)), tokens, { label: `Collection years ${userId}` })

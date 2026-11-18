@@ -159,6 +159,22 @@ collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]
   under "App" on your profile.
 
 
+## Owned matching (redesign step 3)
+
+`src/lib/owned.ts` ties albums (MusicBrainz release groups) to your Discogs
+records. Exact first: `master_groups` (migration 8) maps each Discogs master
+to the release group MusicBrainz links it to (`releaseGroupForDiscogsMaster`,
+the 1/s MB queue), looked up in the background after every collection sync
+(`saveCopy` → `warmMasterGroups`; ~5 min for 300 masters, once). Fallback:
+`nameKey(artist, title)` for records whose master has no link (and only
+those — a linked master never matches another album by name). The index is
+rebuilt when the copy's `syncedAt` changes. Used by: the album page's plum
+"In your collection" card (`owned` on `/api/albums/[mbid]`), search's
+"In your collection" chip (`owned` on each hit), and Home's "Put one on"
+(`/api/me/put-one-on`: three owned-but-unlogged at random, `?skip=` for
+"Another three"). On your 311 records: 260 of 304 masters link exactly.
+
+
 ## The album page (redesign step 2)
 
 - Order: a band tinted with the cover's average colour (canvas over the CAA

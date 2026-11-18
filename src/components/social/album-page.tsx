@@ -4,7 +4,7 @@
 // Logging and rating come first, then your liner note (design/redesign 03/04).
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Headphones, Check, Lock, ListOrdered, Users, Loader2, Pencil, Share, PenLine } from "lucide-react";
+import { Headphones, Check, Lock, ListOrdered, Users, Loader2, Pencil, Share, PenLine, Disc3, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -27,6 +27,8 @@ interface View {
     ranking: { mode: string; order: string[] } | null;
   } | null;
   recent: { handle: string; name: string; avatar_url: string | null; raw: string | null; scale: string | null; ranked: number }[];
+  /** Your copy, when this album is in your Discogs collection. */
+  owned: { releaseId: number; format: string; added: string; copies: number } | null;
 }
 type Tab = "album" | "mine" | "community";
 
@@ -191,6 +193,28 @@ export function AlbumPage({ mbid }: { mbid: string }) {
         />
         <LinerNote note={mine?.note ?? null} busy={busy} onSave={(body) => send("note", "PUT", { body })} signedIn={!!me} onSignIn={prompt.open} />
       </section>
+
+      {/* Yours on the shelf — plum means yours */}
+      {view.owned && (
+        <section className="rounded-2xl border border-yours/30 bg-card overflow-hidden">
+          <div className="px-4 pt-3.5 pb-3 flex items-center gap-2 text-yours font-semibold text-sm">
+            <Disc3 className="w-4 h-4" /> In your collection
+          </div>
+          <div className="mx-4 border-t py-3">
+            <div className="text-xs text-muted-foreground">Your copy{view.owned.copies > 1 ? ` · ${view.owned.copies} copies` : ""}</div>
+            <div className="text-sm font-medium">{view.owned.format || "Vinyl"}</div>
+            {addedLine(view.owned.added) && <div className="text-sm text-muted-foreground">{addedLine(view.owned.added)}</div>}
+          </div>
+          <a
+            href={`https://www.discogs.com/release/${view.owned.releaseId}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mx-4 border-t h-12 flex items-center justify-between text-sm"
+          >
+            Open the pressing on Discogs <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          </a>
+        </section>
+      )}
 
       {/* Tracks */}
       <section className="space-y-3">
@@ -438,4 +462,10 @@ function LinerNote({
       )}
     </div>
   );
+}
+
+/** "Added to Discogs Oct 2026". */
+function addedLine(iso: string) {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : `Added to Discogs ${d.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
 }

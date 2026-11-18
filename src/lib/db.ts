@@ -178,6 +178,17 @@ const MIGRATIONS: string[] = [
     PRIMARY KEY (user_id, album_mbid)
   );
   `,
+  // 8 — which MusicBrainz release group (an album here) each Discogs master
+  // is, from MusicBrainz's own links. Shared data; rg_mbid NULL = no link, so
+  // owned-matching falls back to artist and title for that record.
+  `
+  CREATE TABLE master_groups (
+    master_id  INTEGER PRIMARY KEY,
+    rg_mbid    TEXT,
+    checked_at INTEGER NOT NULL
+  );
+  CREATE INDEX master_groups_rg ON master_groups(rg_mbid);
+  `,
 ];
 
 let db: Database.Database | null = null;

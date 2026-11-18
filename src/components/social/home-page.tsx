@@ -1,16 +1,18 @@
 "use client";
 
-// Home: find an album, see what you've logged lately, and what everyone else is listening to.
+// Home: find an album, put on a record you own but haven't logged, see what
+// you've logged lately, and what everyone else is listening to.
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Search, Loader2, ListOrdered } from "lucide-react";
+import { Search, Loader2, ListOrdered, X, Shuffle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlbumTile, Cover, StarsDisplay } from "./bits";
 import { useMe } from "./me";
 import { SignInButtons } from "./sign-in";
 import { InstallBanner } from "./install-app";
 
-interface Hit { mbid: string; title: string; artist: string; year: number | null; type: string | null; secondary: string[] }
+interface Hit { mbid: string; title: string; artist: string; year: number | null; type: string | null; secondary: string[]; owned?: boolean }
+interface Pick { mbid: string; title: string; artist: string }
 interface Activity { handle: string; name: string; avatar_url: string | null; mbid: string; title: string; artist: string; year: number | null; raw: string | null; scale: string | null; ranked: number; at: number }
 interface MyAlbum { mbid: string; title: string; artist: string; year: number | null; raw: string | null; scale: string | null; ranked: number }
 
@@ -32,6 +34,15 @@ export function HomePage() {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [mine, setMine] = useState<MyAlbum[]>([]);
   const seq = useRef(0);
+  const [picks, setPicks] = useState<{ picks: Pick[]; total: number } | null>(null);
+  const loadPicks = (skip: string[] = []) =>
+    fetch(`/api/me/put-one-on${skip.length ? `?skip=${skip.join(",")}` : ""}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => b && setPicks(b))
+      .catch(() => {});
+  useEffect(() => {
+    if (me) loadPicks();
+  }, [me]);
 
   useEffect(() => {
     fetch("/api/activity").then((r) => r.json()).then((b) => setActivity(b.items ?? [])).catch(() => {});
@@ -65,6 +76,9 @@ export function HomePage() {
     return () => clearTimeout(t);
   }, [q, me]);
 
+  // Your own listens are already in "Your latest"; this is for everyone else.
+  const others = me ? activity.filter((a) => a.handle !== me.handle) : activity;
+
   return (
     <div className="space-y-6">
       {!loading && !me && (
@@ -83,36 +97,78 @@ export function HomePage() {
 
       {me && (
         <section className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-3 w-5 h-5 text-muted-foreground" />
+          <div className="relative flex items-center">
+            <Search className="absolute left-4 w-5 h-5 text-muted-foreground pointer-events-none" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search albums — “rubber soul”, “blonde frank ocean”"
+              placeholder="Search albums"
               enterKeyHint="search"
-              className="w-full pl-11 pr-10 py-2.5 text-base sm:text-sm rounded-full border border-input bg-card placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full h-[50px] pl-12 pr-20 text-base sm:text-sm rounded-full border border-input bg-card placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[1.5px] focus-visible:ring-primary"
             />
-            {searching && <Loader2 className="absolute right-3.5 top-3 w-5 h-5 animate-spin text-muted-foreground" />}
+            <span className="absolute right-1.5 flex items-center">
+              {searching && <Loader2 className="w-5 h-5 mr-1 animate-spin text-muted-foreground" />}
+              {q && (
+                <button onClick={() => setQ("")} aria-label="Clear search" className="w-10 h-10 inline-flex items-center justify-center rounded-full text-muted-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </span>
           </div>
           {searchError && <p className="text-sm text-destructive">{searchError}</p>}
-          {hits && (
-            <ul className="divide-y border-y">
-              {hits.length === 0 && <li className="py-4 px-1 text-sm text-muted-foreground">Nothing by that name.</li>}
-              {hits.map((h) => (
-                <li key={h.mbid}>
-                  <Link href={`/album/${h.mbid}`} className="flex items-center gap-3 py-2.5 px-1 hover:bg-accent">
-                    <Cover mbid={h.mbid} className="w-12 shrink-0" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium truncate">{h.title}</span>
-                      <span className="block text-xs text-muted-foreground truncate">
-                        {[h.artist, h.year, [h.type, ...h.secondary].filter(Boolean).join(" · ")].filter(Boolean).join(" · ")}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
+          {hits && hits.length === 0 && <p className="py-4 px-1 text-sm text-muted-foreground">Nothing by that name.</p>}
+          {hits && hits.length > 0 &&
+            ([["Albums", hits.filter((h) => h.type !== "EP")], ["EPs", hits.filter((h) => h.type === "EP")]] as [string, Hit[]][])
+              .filter(([, list]) => list.length)
+              .map(([label, list]) => (
+                <div key={label}>
+                  <h2 className="section-label px-1 mb-1">{label}</h2>
+                  <ul className="divide-y border-y">
+                    {list.map((h) => (
+                      <li key={h.mbid}>
+                        <Link href={`/album/${h.mbid}`} className="flex items-center gap-3 py-2.5 px-1 hover:bg-accent">
+                          <Cover mbid={h.mbid} className="w-14 shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-medium truncate">{h.title}</span>
+                            <span className="block text-xs text-muted-foreground truncate">
+                              {[h.artist, h.year, h.secondary.join(" · ")].filter(Boolean).join(" · ")}
+                            </span>
+                            {h.owned && (
+                              <span className="mt-1 inline-flex items-center rounded-full bg-yours/[0.12] text-yours px-2 py-0.5 text-[11px] font-semibold">
+                                In your collection
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
-          )}
+        </section>
+      )}
+
+      {me && !hits && picks && picks.picks.length > 0 && (
+        <section className="space-y-2">
+          <div>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold">Put one on</h2>
+            {picks.total > 3 && (
+              <button
+                onClick={() => loadPicks(picks.picks.map((p) => p.mbid))}
+                className="h-10 px-3 -mr-2 rounded-full text-sm font-medium text-primary inline-flex items-center gap-1.5 shrink-0"
+              >
+                <Shuffle className="w-4 h-4" /> Another three
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">From your shelves, not logged yet</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {picks.picks.map((p) => (
+              <AlbumTile key={p.mbid} mbid={p.mbid} title={p.title} artist={p.artist} />
+            ))}
+          </div>
         </section>
       )}
 
@@ -126,21 +182,27 @@ export function HomePage() {
             {mine.map((a) => (
               <div key={a.mbid} className="w-28 shrink-0 snap-start">
                 <AlbumTile mbid={a.mbid} title={a.title} artist={a.artist} badge={a.ranked ? <RankedBadge /> : null} />
-                {a.raw && a.scale === "stars5" && <div className="mt-0.5"><StarsDisplay value={Number(a.raw)} className="w-3 h-3" /></div>}
+                {a.raw && a.scale === "stars5" ? (
+                  <div className="mt-0.5"><StarsDisplay value={Number(a.raw)} className="w-3 h-3" /></div>
+                ) : !a.raw ? (
+                  <Link href={`/album/${a.mbid}`} className="mt-1 inline-flex items-center h-6 px-2.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
+                    Rate it
+                  </Link>
+                ) : null}
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {!hits && (
+      {!hits && (!me || others.length > 0) && (
         <section className="space-y-2">
           <h2 className="font-display text-xl font-semibold">Happening now</h2>
-          {activity.length === 0 ? (
+          {others.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nobody has logged anything yet — be the first.</p>
           ) : (
             <ul className="divide-y border-y">
-              {activity.map((a) => (
+              {others.map((a) => (
                 <li key={`${a.handle}-${a.mbid}`} className="flex items-center gap-3 py-2.5 px-1">
                   <Link href={`/u/${a.handle}`} aria-label={a.name}>
                     <Avatar className="w-8 h-8">

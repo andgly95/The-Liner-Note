@@ -86,7 +86,8 @@ function Frame({ children, wide, inner, bare }: { children: React.ReactNode; wid
             <span className="font-display text-lg font-semibold tracking-tight whitespace-nowrap">The Liner Note</span>
           </Link>
           {loading ? null : me ? (
-            <Link href={`/u/${me.handle}`} className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent">
+            // On a phone the You tab already is this; the header keeps only the name.
+            <Link href={`/u/${me.handle}`} className="hidden md:flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent">
               <Avatar className="w-8 h-8">
                 <AvatarImage src={me.avatarUrl ?? undefined} alt="" />
                 <AvatarFallback>{me.name[0]?.toUpperCase()}</AvatarFallback>
