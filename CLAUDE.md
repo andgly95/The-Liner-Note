@@ -159,6 +159,27 @@ collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]
   under "App" on your profile.
 
 
+## Browse and the per-person collection copy
+
+- **`collection_copies`** (migration 6, `src/lib/collection-copy.ts`): every
+  Discogs-linked person's collection on the server, separate from sharing.
+  `/api/collection` saves it when you load your OWN collection — only after
+  Discogs confirms the (unsigned) `discogs_session` tokens belong to the
+  signed-in person's linked account (`tokensAreUsers`, cached per token). No
+  tokens are stored for it; they're used for that request's background work.
+- **Original years** (`src/lib/master-years.ts`, shared with the shelf):
+  `master_years` holds each master's year; `warmMasterYears` fills the gaps
+  through the shared `paced` queue (one slot, waits on 429s, dedupes a master
+  two warmers want). `/api/collection` returns `years` (by master id) and
+  `yearsPending`; the dashboard polls `/api/collection/years` until it's 0.
+  A friend's collection gets whatever years are known, nothing fetched.
+- **Browse** (`collection-browser.tsx`) is records first: sticky search and
+  chips (Genre, Decade, order, Surprise me) under the section strip (its
+  height is published as `--section-strip`), one summary line, a 3-column
+  grid with original years, and the Stats sheet for exactly the filtered
+  slice (decade chart with empty decades shown, artists with 2+ records).
+
+
 ## The shelf display — the collection on a tablet
 
 `/shelf/[token]` (`src/components/shelf/shelf-display.tsx`, `src/lib/shelf.ts`):

@@ -49,6 +49,10 @@ interface CollectionData {
   optimized: CompressedCollection;
   collectionString: string;
   raw?: DiscogsCollectionItem[];
+  /** Original release year by Discogs master id (what the server knows). */
+  years?: Record<number, number>;
+  /** Your own collection's masters still being looked up. */
+  yearsPending?: number;
 }
 
 interface WantlistData {
@@ -110,6 +114,17 @@ export default function Dashboard() {
   }, []);
 
   const stripRef = useRef<HTMLDivElement>(null);
+  // The strip's height, for whatever sticks under it (Browse's toolbar).
+  const stripWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = stripWrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const set = () => document.documentElement.style.setProperty("--section-strip", `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isLoading, needsDiscogs, user]);
 
   const handleTabChange = useCallback((next: string) => {
     setActiveTab(next);
@@ -161,6 +176,27 @@ export default function Dashboard() {
       setFetchingCollection(false);
     }
   }, []);
+
+  // The server fetches original years for your own collection after it loads
+  // (about a second each, first time only): pick them up as they arrive.
+  useEffect(() => {
+    if (!collection?.yearsPending || viewingUser) return;
+    let last = collection.yearsPending;
+    let stalls = 0;
+    const t = setInterval(async () => {
+      try {
+        const r = await fetch("/api/collection/years", { cache: "no-store" });
+        if (!r.ok) return;
+        const b: { years: Record<number, number>; pending: number } = await r.json();
+        setCollection((c) => (c ? { ...c, years: b.years, yearsPending: b.pending } : c));
+        stalls = b.pending < last ? 0 : stalls + 1;
+        last = b.pending;
+        if (b.pending === 0 || stalls >= 6) clearInterval(t);
+      } catch {}
+    }, 15_000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restart only when a new collection arrives
+  }, [collection?.username, viewingUser, !!collection?.yearsPending]);
 
   const fetchWantlist = useCallback(async (username?: string | null) => {
     setFetchingWantlist(true);
@@ -251,7 +287,10 @@ export default function Dashboard() {
   return (
     <Shell wide>
       {/* Sections — sticky under the header, swiped sideways on a phone */}
-      <div className="sticky top-14 z-20 -mx-4 -mt-4 mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 border-b">
+      <div
+        ref={stripWrapRef}
+        style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
+        className="sticky z-20 -mx-4 -mt-4 mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 border-b">
         <div
           ref={stripRef}
           role="tablist"
@@ -388,13 +427,15 @@ export default function Dashboard() {
       )}
 
       {activeTab === "pressings" && <PressingFinder ownedReleaseIds={ownedReleaseIds} />}
-      {activeTab === "browse" && !viewingUser && collection && (
-        <div className="mb-3 flex justify-end">
-          <ShareCollectionButton label="Send a friend this collection" variant="ghost" className="rounded-full text-primary" />
-        </div>
-      )}
       {activeTab === "browse" && (
-        <CollectionBrowser items={collection?.raw} totalItems={collection?.totalItems ?? 0} isReady={!!collection} />
+        <CollectionBrowser
+          items={collection?.raw}
+          totalItems={collection?.totalItems ?? 0}
+          isReady={!!collection}
+          years={collection?.years}
+          yearsPending={collection?.yearsPending ?? 0}
+          actions={!viewingUser ? <ShareCollectionButton label="Send a friend this collection" iconOnly className="rounded-full w-10 h-10" /> : null}
+        />
       )}
       {activeTab === "shop" && (
         <RecordShopChat collectionString={collectionString} wantlistString={wantlist?.wantlistString} isReady={!!collection} />

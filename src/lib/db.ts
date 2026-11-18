@@ -155,6 +155,18 @@ const MIGRATIONS: string[] = [
     fetched_at INTEGER NOT NULL
   );
   `,
+  // 6 — every Discogs-linked person's collection, kept on the server whether
+  // or not they share it, so Browse knows its records (and their original
+  // years) without waiting on Discogs. Written whenever they load their own
+  // collection; no Discogs tokens are kept for it (that stays a sharing thing).
+  `
+  CREATE TABLE collection_copies (
+    user_id          INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    discogs_username TEXT NOT NULL,
+    items            TEXT NOT NULL,
+    synced_at        INTEGER NOT NULL
+  );
+  `,
 ];
 
 let db: Database.Database | null = null;

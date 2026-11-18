@@ -37,10 +37,13 @@ export function ShareCollectionButton({
   label = "Share collection",
   variant = "outline",
   className = "rounded-full",
+  iconOnly = false,
 }: {
   label?: string;
   variant?: "outline" | "default" | "ghost";
   className?: string;
+  /** Just the icon (the label becomes its accessible name). */
+  iconOnly?: boolean;
 }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,9 +94,17 @@ export function ShareCollectionButton({
   };
 
   return (
-    <Button size="sm" variant={variant} className={className} onClick={share} disabled={busy}>
-      {busy ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : done ? <Check className="w-4 h-4 mr-1.5" /> : <Share2 className="w-4 h-4 mr-1.5" />}
-      {busy ? "Making the link…" : done ? "Copied" : label}
+    <Button
+      size={iconOnly ? "icon" : "sm"}
+      variant={variant}
+      className={className}
+      onClick={share}
+      disabled={busy}
+      aria-label={iconOnly ? label : undefined}
+      title={iconOnly ? label : undefined}
+    >
+      {busy ? <Loader2 className={`w-4 h-4 animate-spin ${iconOnly ? "" : "mr-1.5"}`} /> : done ? <Check className={`w-4 h-4 ${iconOnly ? "" : "mr-1.5"}`} /> : <Share2 className={`w-4 h-4 ${iconOnly ? "" : "mr-1.5"}`} />}
+      {!iconOnly && (busy ? "Making the link…" : done ? "Copied" : label)}
     </Button>
   );
 }

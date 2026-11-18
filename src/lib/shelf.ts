@@ -16,6 +16,7 @@ import path from "node:path";
 import { DATA_DIR, getDb, now } from "@/lib/db";
 import { discogsClient, type DiscogsReleaseFull } from "@/lib/discogs";
 import { paced } from "@/lib/pressing-server";
+import { masterYears, mastersOf, patiently, warmMasterYears } from "@/lib/master-years";
 import type { DiscogsCollectionItem, DiscogsOAuthTokens, DiscogsFormat, DiscogsArtist } from "@/types/discogs";
 
 const REFRESH_AFTER = 6 * 3600 * 1000;
@@ -154,7 +155,8 @@ export function formatLine(formats: DiscogsFormat[] | undefined): string {
   return qty + parts.join(", ");
 }
 
-function toItems(raw: DiscogsCollectionItem[]): ShelfItem[] {
+/** Collection items → one display item per release (copies counted). */
+export function toItems(raw: DiscogsCollectionItem[]): ShelfItem[] {
   const byId = new Map<number, ShelfItem>();
   for (const r of raw) {
     const b = r.basic_information;
@@ -352,29 +354,10 @@ export async function shelfImage(shelf: ShelfRow, releaseId: number, n: number):
   return storedImage(url);
 }
 
-/* ── original release years ─────────────────────────────────────────────── */
-
-function masterYears(ids: number[]): Map<number, number | null> {
-  const out = new Map<number, number | null>();
-  if (!ids.length) return out;
-  const rows = getDb()
-    .prepare("SELECT id, year FROM master_years WHERE id IN (SELECT value FROM json_each(?))")
-    .all(JSON.stringify(ids)) as { id: number; year: number | null }[];
-  for (const r of rows) out.set(r.id, r.year);
-  return out;
-}
-
-async function fetchMasterYear(shelf: ShelfRow, masterId: number): Promise<number | null> {
-  const m = await paced(() => discogsClient.getMaster(masterId, tokensOf(shelf)));
-  const year = m.year && m.year > 0 ? m.year : null;
-  getDb().prepare("INSERT OR REPLACE INTO master_years (id, year, fetched_at) VALUES (?, ?, ?)").run(masterId, year, now());
-  return year;
-}
-
 /** What leaves the Pi: image URLs pointing at the Pi, not at Discogs, and
  *  each record's original release year. */
 export function itemsForClient(items: ShelfItem[], token: string): ShelfItem[] {
-  const years = masterYears(Array.from(new Set(items.map((i) => i.master).filter((m): m is number => !!m))));
+  const years = masterYears(mastersOf(items.map((i) => i.master)));
   return items.map((i) => ({
     ...i,
     original: (i.master ? years.get(i.master) : null) ?? i.year,
@@ -393,21 +376,6 @@ export function releaseForClient(r: ShelfRelease, token: string): ShelfRelease {
 // someone using the pressing finder: it only ever holds one slot.
 const warming = new Set<number>();
 
-// Discogs' 60-a-minute limit is shared with everything else using these
-// tokens (the collection read, the dashboard), so the paced queue alone can
-// still meet a 429. That's "wait", not "failed": pause a minute, try again.
-const rateLimited = (e: unknown) => e instanceof Error && /\b429\b/.test(e.message);
-async function patiently<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; ; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (!rateLimited(e) || i >= 5) throw e;
-      await sleep(60_000);
-    }
-  }
-}
-
 export function warmShelf(shelf: ShelfRow) {
   if (warming.has(shelf.user_id)) return;
   warming.add(shelf.user_id);
@@ -415,20 +383,10 @@ export function warmShelf(shelf: ShelfRow) {
     const items = [...snapshotItems(shelf)].sort((a, b) => b.added.localeCompare(a.added));
     // Original years first: they're what the Year order needs, and quick
     // (one call per album, not per pressing).
-    const masters = Array.from(new Set(items.map((i) => i.master).filter((m): m is number => !!m)));
-    const known = masterYears(masters);
-    let masterFails = 0;
-    for (const m of masters) {
-      if (known.has(m) || masterFails >= 5) continue;
-      if (!shelfForUser(shelf.user_id)) return;
-      try {
-        await patiently(() => fetchMasterYear(shelf, m));
-        masterFails = 0;
-      } catch (e) {
-        masterFails++;
-        console.error(`Shelf warm: master ${m}:`, e instanceof Error ? e.message : e);
-      }
-    }
+    await warmMasterYears(mastersOf(items.map((i) => i.master)), tokensOf(shelf), {
+      label: `Shelf warm ${shelf.user_id}`,
+      keepGoing: () => !!shelfForUser(shelf.user_id),
+    });
     let fetched = 0;
     let failures = 0;
     for (const it of items) {

@@ -222,7 +222,8 @@ shape is settled, but nothing about it should be built yet.
   what Browse shows today. Use the stored master years. Today the Pi only fetches them for
   shared collections, so the fetch moves to the per-person copy below, and anyone who never
   shares gets them too.
-- **The liner note** gets its own table: **migration 6** (2 to 5 went to the shelf work).
+- **The liner note** gets its own table: **migration 7** (2 to 5 went to the shelf work, 6 to
+  the per-person collection copy in step 4).
   One plain-text note per album per person, up to about 2,000 characters.
 - **The rating scale** becomes a per-person setting, but **each rating keeps the scale it
   was given on**, as ratings are stored now. The setting only decides how a new rating is
@@ -257,7 +258,7 @@ shelf work already built. The rest follow in any order.
 1. **Foundations.** Sentence-case labels, visible empty stars, back buttons and headers on
    inner screens, no card inside a card, the hidden zeros. Mostly CSS and copy.
 2. **Album page.** Logging and rating first, the liner note field and its table (migration
-   6), the scale chips moved to settings without touching old ratings, Rank them demoted,
+   7), the scale chips moved to settings without touching old ratings, Rank them demoted,
    hidden zero counts.
 3. **Owned matching.** The search chip, the album page's "In your collection" card without
    its box row, and "Put one on" on Home.
