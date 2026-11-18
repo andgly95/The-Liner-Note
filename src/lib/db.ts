@@ -13,6 +13,8 @@ import fs from "node:fs";
 import path from "node:path";
 
 const FILE = process.env.LINER_DB || path.join(process.cwd(), "data", "liner.db");
+/** Where the database lives; other stored files (shelf covers) sit beside it. */
+export const DATA_DIR = path.dirname(FILE);
 
 // Each entry runs once, in order; PRAGMA user_version records how far we got.
 const MIGRATIONS: string[] = [
@@ -108,6 +110,50 @@ const MIGRATIONS: string[] = [
     PRIMARY KEY (user_id, album_mbid)
   );
   CREATE INDEX rankings_album ON rankings(album_mbid);
+  `,
+  // 2 — the shelf display: a public, read-only view of one person's record
+  // collection for a tablet on their shelf. The link's token is the only key;
+  // the Discogs tokens let the server re-read the collection without the
+  // tablet ever being signed in. Turning the shelf off deletes the row.
+  `
+  CREATE TABLE shelves (
+    user_id          INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    token            TEXT NOT NULL UNIQUE,
+    title            TEXT NOT NULL,
+    discogs_username TEXT NOT NULL,
+    access_token     TEXT NOT NULL,
+    access_secret    TEXT NOT NULL,
+    snapshot         TEXT,
+    snapshot_at      INTEGER,
+    created_at       INTEGER NOT NULL
+  );
+  `,
+  // 3 — a second link to the same shelf, for sending to friends: it opens the
+  // collection to browse on their own phone (no kiosk), and can be changed
+  // without re-coding the tablet. Filled in lazily for shelves made before it.
+  `
+  ALTER TABLE shelves ADD COLUMN share_token TEXT;
+  CREATE UNIQUE INDEX shelves_share_token ON shelves(share_token);
+  `,
+  // 4 — Discogs release pages (tracklist, images) kept on the Pi for the shelf
+  // display, so a record opens instantly and survives restarts. Public data,
+  // shared by every shelf; re-read when a month old.
+  `
+  CREATE TABLE release_cache (
+    id         INTEGER PRIMARY KEY,
+    data       TEXT NOT NULL,
+    fetched_at INTEGER NOT NULL
+  );
+  `,
+  // 5 — the year each Discogs master (the album, across all its pressings)
+  // first came out, so the shelf can order records by when the music was
+  // released rather than when that copy was pressed. year NULL = Discogs has none.
+  `
+  CREATE TABLE master_years (
+    id         INTEGER PRIMARY KEY,
+    year       INTEGER,
+    fetched_at INTEGER NOT NULL
+  );
   `,
 ];
 

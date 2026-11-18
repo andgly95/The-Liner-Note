@@ -138,6 +138,14 @@ html[data-theme="hardbop"] .vinyl-record::after {
 
 /* Room for the bottom tab bar and the home indicator under it. */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Under the status bar / notch when the app runs full-screen. */
+.pt-safe-top { padding-top: env(safe-area-inset-top, 0px); }
+
+/* Running as the installed app: no text-selection callouts on long-press of
+   controls, and no rubber-band past the ends on the chrome itself. */
+@media (display-mode: standalone) {
+  a, button, nav { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+}
 
 /* Custom animations */
 @keyframes spin-slow {
@@ -217,3 +225,30 @@ html[data-theme="hardbop"] .vinyl-record::after {
 .md-guide li { @apply leading-relaxed pl-0.5; }
 .md-guide strong { @apply font-semibold; }
 .md-guide code { @apply font-mono text-[0.85em] bg-muted rounded px-1 py-0.5; }
+
+/* ── The shelf display ─────────────────────────────────────────────────── */
+.shelf-root { -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.shelf-root img { -webkit-user-drag: none; }
+.shelf-scroll { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.shelf-scroll::-webkit-scrollbar { display: none; }
+/* Grooves: fine rings on near-black, and a label hole for the cover art. */
+.shelf-disc {
+  background:
+    radial-gradient(circle, transparent 0 31.5%, #0d0d0d 32% 33.5%, transparent 34%),
+    repeating-radial-gradient(circle, #161616 0 1.2px, #0a0a0a 1.6px 3.2px);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+/* Two soft highlights where the room's light catches the vinyl. */
+.shelf-disc-sheen {
+  background: conic-gradient(from 20deg, transparent 0 8%, rgba(255,255,255,.09) 13%, transparent 19% 58%, rgba(255,255,255,.07) 63%, transparent 69%);
+  -webkit-mask: radial-gradient(circle, transparent 0 34%, #000 35%);
+          mask: radial-gradient(circle, transparent 0 34%, #000 35%);
+}
+@keyframes shelf-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shelf-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes shelf-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes shelf-disc-out { from { transform: translateX(4%); } to { transform: translateX(var(--out, 36%)); } }
+@keyframes shelf-drift { from { transform: scale(1); } to { transform: scale(1.035); } }
+@media (prefers-reduced-motion: reduce) {
+  .shelf-root *, .shelf-root *::before { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}

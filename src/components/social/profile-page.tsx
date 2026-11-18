@@ -10,6 +10,9 @@ import { AlbumTile, StarsDisplay } from "./bits";
 import { RankedBadge } from "./home-page";
 import { useMe } from "./me";
 import { ThemePicker } from "./theme-picker";
+import { InstallAction } from "./install-app";
+import { ShelfSettings } from "./shelf-settings";
+import { clearPersonalCache } from "@/lib/pwa";
 
 interface Profile {
   user: { handle: string; name: string; avatar_url: string | null; bio: string | null; created_at: number };
@@ -42,6 +45,7 @@ export function ProfilePage({ handle }: { handle: string }) {
   const isMe = me?.handle.toLowerCase() === p.user.handle.toLowerCase();
   const signOut = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
+    clearPersonalCache();
     window.location.href = "/";
   };
 
@@ -82,6 +86,20 @@ export function ProfilePage({ handle }: { handle: string }) {
         <section className="space-y-2">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Theme</h2>
           <ThemePicker />
+        </section>
+      )}
+
+      {isMe && linked.includes("discogs") && (
+        <section className="space-y-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Share your collection</h2>
+          <ShelfSettings />
+        </section>
+      )}
+
+      {isMe && (
+        <section className="space-y-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">App</h2>
+          <InstallAction />
         </section>
       )}
 

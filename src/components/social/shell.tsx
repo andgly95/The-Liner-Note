@@ -30,7 +30,7 @@ function Frame({ children, wide }: { children: React.ReactNode; wide: boolean })
   ];
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+      <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 pt-safe-top">
         <div className={`mx-auto ${width} px-4 h-14 flex items-center justify-between gap-3`}>
           <Link href="/home" className="flex items-center gap-2.5 min-w-0">
             <div className="vinyl-record w-7 h-7 shrink-0" />

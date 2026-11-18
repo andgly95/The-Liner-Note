@@ -33,6 +33,7 @@ import { GuideDisplay } from "@/components/features/guide-display";
 import { PressingFinder } from "@/components/features/pressing-finder";
 import { UserSwitcher } from "@/components/features/user-switcher";
 import { CollectionStats } from "@/components/features/collection-stats";
+import { ShareCollectionButton } from "@/components/social/share-collection";
 import type { CompressedCollection, DiscogsCollectionItem } from "@/types/discogs";
 import type { GapFillerResult } from "@/types/analysis";
 
@@ -93,6 +94,13 @@ export default function Dashboard() {
 
   // Restore last-used tab from localStorage so refresh doesn't drop the user back to Roast.
   useEffect(() => {
+    // ?section=pressings (the home-screen shortcut) wins over the saved one.
+    const asked = new URLSearchParams(window.location.search).get("section");
+    if (asked && VALID_TABS.has(asked)) {
+      setActiveTab(asked);
+      try { localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, asked); } catch {}
+      return;
+    }
     try {
       const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
       if (saved && VALID_TABS.has(saved)) setActiveTab(saved);
@@ -311,9 +319,13 @@ export default function Dashboard() {
                     : "Full collection loaded"}
               </div>
             </div>
-            <Button variant="outline" size="icon" onClick={refreshAll} disabled={busy} aria-label="Refresh collection and wantlist">
-              <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* A link for a friend to browse your records — yours only, not one you're viewing */}
+              {!viewingUser && <ShareCollectionButton label="Share" />}
+              <Button variant="outline" size="icon" onClick={refreshAll} disabled={busy} aria-label="Refresh collection and wantlist">
+                <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
           </div>
 
           {/* Truncation warning — surfaces silent dropping for collections > LLM budget */}
@@ -376,6 +388,11 @@ export default function Dashboard() {
       )}
 
       {activeTab === "pressings" && <PressingFinder ownedReleaseIds={ownedReleaseIds} />}
+      {activeTab === "browse" && !viewingUser && collection && (
+        <div className="mb-3 flex justify-end">
+          <ShareCollectionButton label="Send a friend this collection" variant="ghost" className="rounded-full text-primary" />
+        </div>
+      )}
       {activeTab === "browse" && (
         <CollectionBrowser items={collection?.raw} totalItems={collection?.totalItems ?? 0} isReady={!!collection} />
       )}

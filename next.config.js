@@ -3,6 +3,19 @@ const nextConfig = {
   output: 'standalone',
   // Native module: must be required at runtime, not bundled by webpack.
   experimental: { serverComponentsExternalPackages: ['better-sqlite3'] },
+  // The service worker must never be cached by the browser, or updates stall.
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+          { key: 'Service-Worker-Allowed', value: '/' },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

@@ -134,3 +134,81 @@ collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]
 - **Previews**: `next dev` in a scratch copy with a symlinked node_modules is
   fine. **Never `next build` there** — on 2026-11-09 that emptied this repo's
   node_modules (suspect: standalone output). Verify builds with a real copy.
+
+
+## The installed app (PWA)
+
+- **Manifest**: `src/app/manifest.ts` → `/manifest.webmanifest` (start `/home`,
+  standalone, shortcuts to `/dashboard?section=pressings|browse` — the dashboard
+  honours `?section=`). Icons in `public/icons/` (any + maskable);
+  `src/app/apple-icon.png` and `favicon.ico` use Next's file convention, which
+  OVERRIDES `metadata.icons` — don't add icons there.
+- **Service worker**: hand-written `public/sw.js`, no build step. Pages network
+  first (last copy kept, else `/offline`); `/_next/static` cache first; cover
+  art (Cover Art Archive only) cache first, fetched with CORS so nothing opaque
+  is stored — Discogs images are left alone; GET reads of
+  `/api/albums|artists|users|activity|me` network first. Auth, AI streams,
+  Discogs and every POST pass through. Any `/api/auth/*` request wipes the API
+  cache. Bump `VERSION` only when caching logic changes. `/sw.js` is served
+  `no-store` (`next.config.js`).
+- **Client** (`src/components/pwa-client.tsx`, `src/lib/pwa.ts`): registers
+  only in production and UNREGISTERS in `next dev` (a worker from `npm start`
+  on :3000 would serve stale chunks). New version → toast with Reload
+  (skip-waiting); never auto-swaps. Install: `beforeinstallprompt` is caught at
+  load; iOS gets Share → Add to Home Screen. Banner on Home (dismissible), row
+  under "App" on your profile.
+
+
+## The shelf display — the collection on a tablet
+
+`/shelf/[token]` (`src/components/shelf/shelf-display.tsx`, `src/lib/shelf.ts`):
+a dark, read-only gallery of one person's Discogs collection for a tablet on
+their record shelf. Owner turns it on from their profile (`ShelfSettings`).
+
+- **No sign-in on the tablet.** `shelves` (migration 2) holds a 10-char token
+  (the link; `/shelf` lets you type it as `abcde-23456`) and the owner's Discogs
+  tokens, so the server reads the collection itself. Enabling verifies the
+  unsigned `discogs_session` with Discogs AND that the Discogs account is linked
+  to the signed-in user. Turning it off deletes the row (and the tokens).
+- **Two links to one shelf.** `token` is the tablet's code; `share_token`
+  (migration 3, made lazily for older rows) is the link friends get from
+  "Share collection" (`share-collection.tsx`: dashboard overview + Browse, and
+  the profile). Either opens `/shelf/[token]`; the friends' one renders with
+  `kiosk={false}` — no slideshow, wake lock, fullscreen or shelf manifest —
+  and never exposes the tablet code (its manifest route 404s). Each rotates on
+  its own. The first Share tap turns the shelf on if it's off.
+- **Snapshot**: the collection is stored as JSON on the row and re-read in the
+  background when older than 6 h (one refresh per shelf at a time). Only
+  display fields — no notes, ratings or prices. The page SSRs the snapshot.
+- **Release pages** (tracklist, back cover = `images[1]`) load on tap, only for
+  releases in the snapshot, paced via `pressing-server`'s queue, cached a day.
+- **Kiosk behaviour**: 90 s untouched → slideshow with clock, and the wall
+  resets (search, genre, sort); the waking tap is swallowed. Screen Wake Lock
+  while visible. Reloads itself (while idle) after 12 h. Takes SW updates
+  without a toast. Ignores the app theme (THEME_SCRIPT skips `/shelf`). Its own
+  manifest (`/shelf/[token]/manifest.webmanifest`, display fullscreen) so Add to
+  Home Screen opens the shelf. SW caches `/api/shelf/*` reads so a Wi-Fi drop
+  doesn't blank the wall; Discogs covers rely on the HTTP cache.
+- **Everything is kept on the Pi** (`shelf.ts`): release pages in
+  `release_cache` (migration 4, shared by all shelves, re-read after 30 days,
+  stale served if Discogs fails); covers and back covers as files in
+  `data/shelf-images/` (named by a hash of the Discogs URL), served by
+  `/api/shelf/[token]/img/[id]/[n]` (0 = wall cover, 1+ = release images).
+  Clients never see Discogs image URLs (`itemsForClient`/`releaseForClient`).
+  `warmShelf` fills both after every snapshot and once per process start,
+  newest first, holding one slot of the shared `paced` queue at a time; it
+  stops after 5 failures in a row. The profile shows "saving to the Pi: n of m".
+- **Discogs' image server returns 429 to bursts.** The Pi fetches images 3 at a
+  time with backoff; `Cover` also retries (~2 s, 5 s, 12 s). It sends no CORS
+  headers, so the SW must never fetch Discogs with CORS (that doubled every
+  request); the Pi-served covers are cached by the SW like any image.
+- **Year = when the album came out**, not the pressing: snapshots keep each
+  record's Discogs `master` id, `master_years` (migration 5) holds each
+  master's year (warmed before release pages, ~1 call per album), and
+  `itemsForClient` adds `original` (falls back to the pressing year; old
+  snapshots without `master` trigger a re-read). The record view shows
+  "1965 · Pressed 2025". A 429 from Discogs makes the warmer wait a minute and
+  retry (`patiently`) rather than count a failure.
+- **Artists**: the fourth order ("Artists") is a grid of circles, A–Z; tapping
+  one (or the artist name in a record) opens their page — every record, oldest
+  first, swiping through only theirs. "A–Z" is records in artist order.

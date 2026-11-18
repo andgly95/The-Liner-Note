@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlbumTile, Cover, StarsDisplay } from "./bits";
 import { useMe } from "./me";
 import { SignInButtons } from "./sign-in";
+import { InstallBanner } from "./install-app";
 
 interface Hit { mbid: string; title: string; artist: string; year: number | null; type: string | null; secondary: string[] }
 interface Activity { handle: string; name: string; avatar_url: string | null; mbid: string; title: string; artist: string; year: number | null; raw: string | null; scale: string | null; ranked: number; at: number }
@@ -77,6 +78,8 @@ export function HomePage() {
           </p>
         </section>
       )}
+
+      {me && <InstallBanner />}
 
       {me && (
         <section className="space-y-3">

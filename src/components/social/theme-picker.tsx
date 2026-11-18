@@ -9,7 +9,7 @@ const THEMES = [
   { id: "hardbop", label: "Hard Bop", blurb: "1950s jazz-label blue", bg: "#f4f2ee", ink: "#18449f", font: "var(--font-condensed)" },
 ] as const;
 
-const THEME_COLOR: Record<string, string> = { paper: "#f6f1e8", hardbop: "#f4f2ee" };
+export const THEME_COLOR: Record<string, string> = { paper: "#f6f1e8", hardbop: "#f4f2ee" };
 
 export function applyTheme(id: string) {
   if (id === "paper") delete document.documentElement.dataset.theme;
