@@ -53,6 +53,18 @@ interface CollectionData {
   years?: Record<number, number>;
   /** Your own collection's masters still being looked up. */
   yearsPending?: number;
+  /** When this copy was read from Discogs. */
+  syncedAt?: number;
+}
+
+/** "just now", "2 min ago", "3 h ago", "Nov 12". */
+function syncedAgo(t: number, now = Date.now()) {
+  const m = Math.floor((now - t) / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} h ago`;
+  return new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 interface WantlistData {
@@ -158,23 +170,85 @@ export default function Dashboard() {
     checkAuth();
   }, [router]);
 
-  const fetchCollection = useCallback(async (username?: string | null) => {
-    setFetchingCollection(true);
-    try {
+  // Your own collection opens from the server's copy at once and syncs with
+  // Discogs behind it; only the very first load (no copy yet) waits, showing
+  // placeholders and page progress. A friend's is always read live.
+  const collSeq = useRef(0); // a newer request (switching collections) wins
+  const [syncing, setSyncing] = useState(false);
+  const [loadProgress, setLoadProgress] = useState<{ current: number; total: number } | null>(null);
+  const fetchCollection = useCallback(async (username?: string | null, opts: { background?: boolean } = {}) => {
+    const n = ++collSeq.current;
+    const current = () => n === collSeq.current;
+    const live = async (): Promise<CollectionData> => {
       const url = username ? `/api/collection?username=${encodeURIComponent(username)}` : "/api/collection";
-      const res = await fetch(url);
-      if (!res.ok) {
-        if (res.status === 403) throw new Error("Collection is private");
-        throw new Error("Failed to fetch collection");
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(res.status === 403 ? "Collection is private" : "Failed to fetch collection");
+      return res.json();
+    };
+    const syncBehind = async () => {
+      setSyncing(true);
+      try {
+        const data = await live();
+        if (current()) setCollection(data);
+      } catch (error) {
+        console.error("Collection sync failed:", error); // keep showing the copy
+      } finally {
+        if (current()) setSyncing(false);
       }
-      const data = await res.json();
-      setCollection(data);
+    };
+
+    if (!username && opts.background) return syncBehind();
+    if (!username) {
+      try {
+        const res = await fetch("/api/collection?cached=1", { cache: "no-store" });
+        if (res.ok) {
+          const copy = await res.json();
+          if (!current()) return;
+          setCollection(copy);
+          return syncBehind();
+        }
+      } catch {}
+    }
+
+    setFetchingCollection(true);
+    const poll = !username
+      ? setInterval(async () => {
+          try {
+            const p = await (await fetch("/api/collection/progress", { cache: "no-store" })).json();
+            if (current()) setLoadProgress(p.total ? p : null);
+          } catch {}
+        }, 800)
+      : undefined;
+    try {
+      const data = await live();
+      if (current()) setCollection(data);
     } catch (error) {
       console.error("Error fetching collection:", error);
-      setCollection(null);
+      if (current()) setCollection(null);
     } finally {
-      setFetchingCollection(false);
+      clearInterval(poll);
+      if (current()) {
+        setFetchingCollection(false);
+        setLoadProgress(null);
+      }
     }
+  }, []);
+
+  // Back in the app after a while: sync your collection behind what's shown.
+  useEffect(() => {
+    const onShow = () => {
+      if (document.visibilityState !== "visible" || viewingUser || syncing || fetchingCollection) return;
+      if (collection?.syncedAt && Date.now() - collection.syncedAt > 10 * 60_000) fetchCollection(null, { background: true });
+    };
+    document.addEventListener("visibilitychange", onShow);
+    return () => document.removeEventListener("visibilitychange", onShow);
+  }, [collection?.syncedAt, viewingUser, syncing, fetchingCollection, fetchCollection]);
+
+  // "synced 2 min ago" keeps counting.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((x) => x + 1), 60_000);
+    return () => clearInterval(t);
   }, []);
 
   // The server fetches original years for your own collection after it loads
@@ -274,7 +348,8 @@ export default function Dashboard() {
 
   const busy = fetchingCollection || fetchingWantlist;
   const refreshAll = () => {
-    fetchCollection(viewingUser);
+    // Yours: sync behind what's shown. A friend's: read again.
+    fetchCollection(viewingUser, { background: !viewingUser && !!collection });
     fetchWantlist(viewingUser);
   };
   const recent = collection?.raw?.slice(0, 20) ?? [];
@@ -353,16 +428,18 @@ export default function Dashboard() {
                 <Disc3 className="w-3.5 h-3.5" />
                 {!collection
                   ? fetchingCollection ? "Loading collection…" : "Collection not loaded"
-                  : collection.optimized.truncated
-                    ? `Analyses use the top ${collection.optimized.truncatedAt?.toLocaleString()} records`
-                    : "Full collection loaded"}
+                  : syncing
+                    ? "Syncing with Discogs…"
+                    : collection.syncedAt
+                      ? `Synced ${syncedAgo(collection.syncedAt)}`
+                      : "Collection loaded"}
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {/* A link for a friend to browse your records — yours only, not one you're viewing */}
               {!viewingUser && <ShareCollectionButton label="Share" />}
               <Button variant="outline" size="icon" onClick={refreshAll} disabled={busy} aria-label="Refresh collection and wantlist">
-                <RefreshCw className={`w-4 h-4 ${busy ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-4 h-4 ${busy || syncing ? "animate-spin" : ""}`} />
               </Button>
             </div>
           </div>
@@ -434,6 +511,7 @@ export default function Dashboard() {
           isReady={!!collection}
           years={collection?.years}
           yearsPending={collection?.yearsPending ?? 0}
+          progress={loadProgress}
           actions={!viewingUser ? <ShareCollectionButton label="Send a friend this collection" iconOnly className="rounded-full w-10 h-10" /> : null}
         />
       )}

@@ -7,7 +7,7 @@
 // (the Discogs master's), not the pressing's.
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Search, Disc3, Star, Shuffle, X, Loader2, ChevronDown, BarChart3 } from "lucide-react";
+import { Search, Disc3, Star, Shuffle, X, ChevronDown, BarChart3 } from "lucide-react";
 import type { DiscogsCollectionItem } from "@/types/discogs";
 
 interface CollectionBrowserProps {
@@ -20,6 +20,8 @@ interface CollectionBrowserProps {
   yearsPending?: number;
   /** Buttons for the summary line (e.g. share). */
   actions?: React.ReactNode;
+  /** The first read of a collection, as it goes: records so far, of how many. */
+  progress?: { current: number; total: number } | null;
 }
 
 type SortKey = "added_desc" | "added_asc" | "year_asc" | "year_desc" | "artist_az" | "rating_desc";
@@ -41,7 +43,7 @@ const artistKey = (it: DiscogsCollectionItem) => artistName(it).toLowerCase().re
 const decadeLabel = (d: number) => `${d}s`;
 const shortDecade = (d: number) => `’${String(d).slice(2)}s`;
 
-export function CollectionBrowser({ items, totalItems, isReady, years, yearsPending = 0, actions }: CollectionBrowserProps) {
+export function CollectionBrowser({ items, totalItems, isReady, years, yearsPending = 0, actions, progress }: CollectionBrowserProps) {
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState(ALL);
   const [decade, setDecade] = useState(ALL);
@@ -123,14 +125,7 @@ export function CollectionBrowser({ items, totalItems, isReady, years, yearsPend
     if (filtered.length) setPick(filtered[Math.floor(Math.random() * filtered.length)]);
   };
 
-  if (!isReady) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
-        <Loader2 className="w-6 h-6 animate-spin" />
-        <span className="text-sm">Loading your collection…</span>
-      </div>
-    );
-  }
+  if (!isReady) return <FirstLoad progress={progress ?? null} />;
 
   return (
     <section>
@@ -239,6 +234,37 @@ export function CollectionBrowser({ items, totalItems, isReady, years, yearsPend
           onClose={() => setStatsOpen(false)}
         />
       )}
+    </section>
+  );
+}
+
+/** 07 — only before the server has a copy: the grid's shape, and the pages
+ *  coming in (the 1-second gap between Discogs pages, made visible). */
+function FirstLoad({ progress }: { progress: { current: number; total: number } | null }) {
+  const pages = progress ? Math.max(1, Math.ceil(progress.total / 100)) : 0;
+  const page = progress ? Math.min(pages, Math.max(1, Math.ceil(progress.current / 100))) : 0;
+  return (
+    <section aria-busy="true">
+      <div className="h-1 rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full bg-primary rounded-full transition-[width] duration-700 ${progress ? "" : "w-1/4 animate-pulse"}`}
+          style={progress ? { width: `${Math.max(6, (progress.current / Math.max(1, progress.total)) * 100)}%` } : undefined}
+        />
+      </div>
+      <p className="mt-2 mb-4 text-sm text-muted-foreground">
+        {progress
+          ? `Loading ${progress.total.toLocaleString()} records · ${page} of ${pages} page${pages === 1 ? "" : "s"}`
+          : "Loading your records from Discogs…"}
+      </p>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-3 gap-y-5">
+        {Array.from({ length: 12 }, (_, i) => (
+          <div key={i}>
+            <div className="aspect-square rounded-md bg-muted animate-pulse" />
+            <div className="mt-2 h-3 w-4/5 rounded bg-muted" />
+            <div className="mt-1.5 h-3 w-3/5 rounded bg-muted/70" />
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

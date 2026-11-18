@@ -173,6 +173,13 @@ collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]
   two warmers want). `/api/collection` returns `years` (by master id) and
   `yearsPending`; the dashboard polls `/api/collection/years` until it's 0.
   A friend's collection gets whatever years are known, nothing fetched.
+- **Opening instantly** (step 5): the copy holds the raw Discogs items.
+  `/api/collection?cached=1` answers from it with no Discogs call (404 when
+  there's none); the dashboard shows that, then re-reads live behind it
+  ("Syncing with Discogs…" → "Synced 2 min ago"), and again when the app comes
+  back after 10 min. Only the very first load waits: placeholders plus "2 of 4
+  pages" from `/api/collection/progress` (fed by `getFullCollection`'s
+  `onProgress`). A request sequence makes a newer collection (a friend's) win.
 - **Browse** (`collection-browser.tsx`) is records first: sticky search and
   chips (Genre, Decade, order, Surprise me) under the section strip (its
   height is published as `--section-strip`), one summary line, a 3-column

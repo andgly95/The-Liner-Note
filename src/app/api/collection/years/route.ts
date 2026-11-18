@@ -10,5 +10,5 @@ export async function GET() {
   if (!me) return Response.json({ error: "Sign in" }, { status: 401 });
   const copy = copyFor(me.id);
   if (!copy) return Response.json({ years: {}, pending: 0 });
-  return Response.json(yearsFor(copy.items.map((i) => i.master)));
+  return Response.json(yearsFor(copy.items.map((i) => i.basic_information.master_id)));
 }
