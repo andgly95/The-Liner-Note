@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pink Moon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F4ED}
+a{color:#8E3329;text-decoration:none}a:hover{color:#6F271F}
+button{font:inherit;cursor:pointer}
+input,textarea{font:inherit}
+input::placeholder,textarea::placeholder{color:#7A6D63}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 1560px; box-sizing: border-box; overflow: hidden; background: {{t.bg}}; color: {{t.ink}}; font-family: Inter, -apple-system, system-ui, sans-serif; font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased">
+<div style="position: absolute; inset: 0; overflow-y: auto">
+  <div style="position: relative; padding: 54px 0 22px; background: rgba(111, 133, 120, 0.16)">
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 0">
+    <button type="button" aria-label="Back" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <div style="display: flex; gap: 8px"><button type="button" aria-label="Share" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="m16 6-4-4-4 4"></path><path d="M12 2v13"></path></svg></button><button type="button" aria-label="More" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button></div>
+  </div>
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 24px 0; text-align: center">
+    <span style="box-shadow: 0 12px 28px rgba(37, 29, 24, 0.22); border-radius: 10px"><span aria-hidden="true" style="position: relative; display: block; width: 210px; height: 210px; flex-shrink: 0; border-radius: 10px; background: #6F8578; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="210" height="210" viewBox="0 0 210 210" style="position: absolute; inset: 0"><circle cx="105.0" cy="105.0" r="63.0" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="3.5"></circle><circle cx="105.0" cy="105.0" r="39.1" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="105.0" cy="105.0" r="5.2" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span></span>
+    <span style="margin-top: 16px; font-size: 13px; font-weight: 500; color: {{t.muted}}">Album · 1972</span>
+    <h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 36px; line-height: 1.1; font-weight: 600; letter-spacing: -0.015em">Pink Moon</h1>
+    <a href="#" style="font-size: 17px; font-weight: 600; color: {{t.ink}}">Nick Drake</a>
+  </div>
+</div>
+  <main style="display: flex; flex-direction: column; gap: 16px; padding: 18px 16px 120px">
+    <section style="border-radius: 18px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><button type="button" aria-pressed="false" style="height: 48px; padding: 0 18px; border: 0; border-radius: 24px; background: {{t.accent}}; color: {{t.onAccent}}; font-size: 15.5px; font-weight: 600; display: flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"></path></svg>Log a listen</button><span style="font-size: 13px; color: {{t.muted}}">Tap to rate</span></div>
+  <div role="group" aria-label="Your rating" style="display: flex; justify-content: space-between; margin: -4px -2px"><button type="button" aria-label="1 star" style="width: 44px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0"><g fill="none" stroke="{{t.muted}}" stroke-width="1.6" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></g></svg></button><button type="button" aria-label="2 stars" style="width: 44px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0"><g fill="none" stroke="{{t.muted}}" stroke-width="1.6" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></g></svg></button><button type="button" aria-label="3 stars" style="width: 44px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0"><g fill="none" stroke="{{t.muted}}" stroke-width="1.6" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></g></svg></button><button type="button" aria-label="4 stars" style="width: 44px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0"><g fill="none" stroke="{{t.muted}}" stroke-width="1.6" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></g></svg></button><button type="button" aria-label="5 stars" style="width: 44px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink: 0"><g fill="none" stroke="{{t.muted}}" stroke-width="1.6" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></g></svg></button></div>
+  <button type="button" style="min-height: 64px; border: 0; border-radius: 14px; background: {{t.raised}}; color: {{t.muted}}; padding: 14px 16px; display: flex; align-items: flex-start; gap: 10px; text-align: left; font-size: 16px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg>Write a liner note…</button>
+</section>
+    <section style="border-radius: 18px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; padding: 14px 16px 4px">
+  <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 10px; color: {{t.plum}}; font-size: 15px; font-weight: 700"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle></svg>In your collection</div>
+  <div style="display: flex; flex-direction: column; gap: 1px; padding: 12px 0; border-top: 1px solid {{t.hair}}">
+    <span style="font-size: 13px; color: {{t.muted}}">Your copy</span>
+    <span style="font-size: 15.5px; font-weight: 600">Reissue, added to Discogs Oct 2026</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid {{t.hair}}">
+      <span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 13px; color: {{t.muted}}">Box</span><span style="font-size: 15.5px; font-weight: 600">Not in a box yet</span></span>
+      <button type="button" style="height: 38px; padding: 0 14px; border: 0; border-radius: 19px; background: {{t.plum}}; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path></svg>Put it in a box</button>
+    </div>
+  <a href="#" style="display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-top: 1px solid {{t.hair}}; color: {{t.ink2}}; font-size: 15px; font-weight: 500">Open the pressing on Discogs<span aria-hidden="true" style="display: flex; color: {{t.muted}}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></span></a>
+</section>
+    <div style="height: 10px"></div>
+    <section style="display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 1px"><h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 24px; line-height: 1.15; font-weight: 600; letter-spacing: -0.01em">Tracks</h2><span style="font-size: 14px; color: {{t.muted}}">11 tracks · 28 min</span></div>
+    <button type="button" style="height: 40px; padding: 0 14px; border: 0; border-radius: 20px; background: transparent; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; font-size: 14.5px; font-weight: 600; display: flex; align-items: center; gap: 7px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M10 12h11"></path><path d="M10 18h11"></path><path d="M10 6h11"></path><path d="M4 10h2"></path><path d="M4 6h1v4"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>Rank them</button>
+  </div>
+  <div><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">1</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Pink Moon</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">2:00</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">2</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Place to Be</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">2:39</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">3</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Road</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">1:58</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">4</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Which Will</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">2:56</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">5</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Horn</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">1:19</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">6</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Things Behind the Sun</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">3:53</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">7</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Know</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">2:23</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">8</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Parasite</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">3:33</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">9</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Free Ride</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">3:03</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">10</span>
+  <span class="ell" style="flex: 1; font-size: 16px">Harvest Breed</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">1:37</span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; min-height: 52px; padding: 0 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span style="width: 22px; text-align: right; font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">11</span>
+  <span class="ell" style="flex: 1; font-size: 16px">From the Morning</span>
+  <span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">2:30</span>
+</a></div>
+</section>
+  </main>
+</div>
+<nav aria-label="Tabs" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; box-sizing: border-box; padding-bottom: 20px; background: {{t.bg}}; border-top: 1px solid {{t.line}}; display: flex"><a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.accent}}; font-size: 12px; font-weight: 600"><span style="width: 60px; height: 32px; border-radius: 16px; background: {{t.accentTint}}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"></path></svg></span>Home</a><a href="#" aria-current="false" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.muted}}; font-size: 12px; font-weight: 500"><span style="width: 60px; height: 32px; border-radius: 16px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></svg></span>Collection</a><a href="#" aria-current="false" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.muted}}; font-size: 12px; font-weight: 500"><span style="width: 60px; height: 32px; border-radius: 16px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg></span>You</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { t: { bg: '#F7F4ED', card: '#FDFCF9', raised: '#EFEAE2', line: '#DDD5CA', hair: '#E9E3D9', ink: '#251D18', ink2: '#4A3F37', muted: '#6B6057', faint: '#B8AEA3', accent: '#8E3329', accentTint: '#ECE0D9', onAccent: '#FFFFFF', plum: '#894D6B', plumTint: 'rgba(137, 77, 107, 0.12)', ok: '#4F7A4A', okTint: 'rgba(79, 122, 74, 0.12)', skel: '#E9E3D9', scrim: 'rgba(37, 29, 24, 0.40)', shadow: '0 1px 2px rgba(60, 40, 20, 0.10)' } };
+  }
+}
+</script>
+</body>
+</html>

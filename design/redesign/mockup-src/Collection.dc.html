@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Collection</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F4ED}
+a{color:#8E3329;text-decoration:none}a:hover{color:#6F271F}
+button{font:inherit;cursor:pointer}
+input,textarea{font:inherit}
+input::placeholder,textarea::placeholder{color:#7A6D63}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 1520px; box-sizing: border-box; overflow: hidden; background: {{t.bg}}; color: {{t.ink}}; font-family: Inter, -apple-system, system-ui, sans-serif; font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased">
+<div style="position: absolute; inset: 0; overflow-y: auto; padding-top: 54px">
+  <header style="display: flex; flex-direction: column; gap: 12px; padding: 6px 16px 0">
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 34px; line-height: 1.1; font-weight: 600; letter-spacing: -0.015em">Collection</h1>
+      <span style="font-size: 14px; color: {{t.muted}}">311 records · 14 wanted</span>
+    </div>
+    <div style="display: flex; gap: 8px; padding-top: 2px"><button type="button" aria-label="Look at a friend's collection" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></button><button type="button" aria-label="Send a friend this collection" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="m16 6-4-4-4 4"></path><path d="M12 2v13"></path></svg></button><button type="button" aria-label="Sync with Discogs" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg></button></div>
+  </div>
+  <div role="group" aria-label="Collection" style="display: flex; gap: 2px; padding: 4px; border-radius: 12px; background: {{t.raised}}"><button type="button" aria-pressed="true" style="flex: 1; height: 32px; border: 0; border-radius: 9px; background: {{t.card}}; color: {{t.ink}}; font-size: 14px; font-weight: 600; padding: 0 6px; box-shadow: {{t.shadow}}; ">Overview</button><button type="button" aria-pressed="false" style="flex: 1; height: 32px; border: 0; border-radius: 9px; background: transparent; color: {{t.muted}}; font-size: 14px; font-weight: 500; padding: 0 6px; ">Browse</button><button type="button" aria-pressed="false" style="flex: 1; height: 32px; border: 0; border-radius: 9px; background: transparent; color: {{t.muted}}; font-size: 14px; font-weight: 500; padding: 0 6px; ">Pressings</button><button type="button" aria-pressed="false" style="flex: 1; height: 32px; border: 0; border-radius: 9px; background: transparent; color: {{t.muted}}; font-size: 14px; font-weight: 500; padding: 0 6px; ">Shop</button></div>
+</header>
+  <main style="display: flex; flex-direction: column; gap: 30px; padding: 22px 16px 120px">
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 24px; line-height: 1.15; font-weight: 600; letter-spacing: -0.01em">Your shelves</h2><span style="font-size: 14px; color: {{t.muted}}">Tap a box to browse it</span></div>
+      <div role="group" aria-label="Boxes on the Kallax" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 6px; border-radius: 10px; background: #C9B9A4"><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T1</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">25</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">60s pop and rock</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T2</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">27</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">70s rock and prog</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T3</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">20</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">90s and 2000s</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T4</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">20</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Vocal pop and city pop</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B1</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">34</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Miles and Coltrane</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B2</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">35</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Bebop and hard bop</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B3</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">31</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Modal, fusion, free</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B4</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">35</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Classical and early jazz</span>
+</button></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; border-radius: 14px; background: {{t.plumTint}}">
+        <span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15.5px; font-weight: 600">75 records aren't in a box</span><span style="font-size: 13.5px; color: {{t.muted}}">Everything added since you last shelved</span></span>
+        <button type="button" style="height: 38px; padding: 0 14px; border: 0; border-radius: 19px; background: {{t.plum}}; color: #FFFFFF; font-size: 14px; font-weight: 600">Shelve them</button>
+      </div>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between"><h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 24px; line-height: 1.15; font-weight: 600; letter-spacing: -0.01em">Recently added</h2><a href="#" style="font-size: 15px; font-weight: 600">Browse all</a></div>
+      <div data-scroll-x style="display: flex; gap: 14px; overflow-x: auto; margin: 0 -16px; padding: 0 16px"><a href="#" style="width: 120px; display: flex; flex-direction: column; gap: 6px; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 120px; height: 120px; flex-shrink: 0; border-radius: 8px; background: #C79A55; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="120" height="120" viewBox="0 0 120 120" style="position: absolute; inset: 0"><circle cx="60.0" cy="60.0" r="36.0" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2.0"></circle><circle cx="60.0" cy="60.0" r="22.3" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="60.0" cy="60.0" r="3.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+    <span class="ell" style="font-size: 14px; font-weight: 600">Can't Buy A Thrill</span>
+    <span class="ell" style="font-size: 13px; color: {{t.muted}}">Steely Dan</span>
+  </span><span style="align-self: flex-start; display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.muted}}; font-size: 11px; font-weight: 600; white-space: nowrap">No box</span>
+</a><a href="#" style="width: 120px; display: flex; flex-direction: column; gap: 6px; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 120px; height: 120px; flex-shrink: 0; border-radius: 8px; background: #3F4A5E; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="120" height="120" viewBox="0 0 120 120" style="position: absolute; inset: 0"><circle cx="60.0" cy="60.0" r="36.0" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2.0"></circle><circle cx="60.0" cy="60.0" r="22.3" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="60.0" cy="60.0" r="3.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+    <span class="ell" style="font-size: 14px; font-weight: 600">Follow The Leader</span>
+    <span class="ell" style="font-size: 13px; color: {{t.muted}}">Eric B. & Rakim</span>
+  </span><span style="align-self: flex-start; display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.muted}}; font-size: 11px; font-weight: 600; white-space: nowrap">No box</span>
+</a><a href="#" style="width: 120px; display: flex; flex-direction: column; gap: 6px; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 120px; height: 120px; flex-shrink: 0; border-radius: 8px; background: #B4AA9A; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="120" height="120" viewBox="0 0 120 120" style="position: absolute; inset: 0"><circle cx="60.0" cy="60.0" r="36.0" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2.0"></circle><circle cx="60.0" cy="60.0" r="22.3" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="60.0" cy="60.0" r="3.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+    <span class="ell" style="font-size: 14px; font-weight: 600">Off White</span>
+    <span class="ell" style="font-size: 13px; color: {{t.muted}}">James White & The Blacks</span>
+  </span><span style="align-self: flex-start; display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.muted}}; font-size: 11px; font-weight: 600; white-space: nowrap">No box</span>
+</a><a href="#" style="width: 120px; display: flex; flex-direction: column; gap: 6px; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 120px; height: 120px; flex-shrink: 0; border-radius: 8px; background: #82766A; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="120" height="120" viewBox="0 0 120 120" style="position: absolute; inset: 0"><circle cx="60.0" cy="60.0" r="36.0" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="2.0"></circle><circle cx="60.0" cy="60.0" r="22.3" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="60.0" cy="60.0" r="3.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+    <span class="ell" style="font-size: 14px; font-weight: 600">Stop Making Sense</span>
+    <span class="ell" style="font-size: 13px; color: {{t.muted}}">Talking Heads</span>
+  </span><span style="align-self: flex-start; display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: 6px; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.muted}}; font-size: 11px; font-weight: 600; white-space: nowrap">No box</span>
+</a></div>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 24px; line-height: 1.15; font-weight: 600; letter-spacing: -0.01em">What it is</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px"><div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+  <span style="font-size: 15px">Jazz</span><span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">158</span>
+  <span style="grid-column: 1 / -1; height: 8px; border-radius: 4px; background: {{t.raised}}; overflow: hidden"><span style="display: block; width: 100.0%; height: 100%; border-radius: 4px; background: {{t.accent}}"></span></span>
+</div><div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+  <span style="font-size: 15px">Rock</span><span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">119</span>
+  <span style="grid-column: 1 / -1; height: 8px; border-radius: 4px; background: {{t.raised}}; overflow: hidden"><span style="display: block; width: 75.3%; height: 100%; border-radius: 4px; background: {{t.accent}}"></span></span>
+</div><div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+  <span style="font-size: 15px">Pop</span><span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">23</span>
+  <span style="grid-column: 1 / -1; height: 8px; border-radius: 4px; background: {{t.raised}}; overflow: hidden"><span style="display: block; width: 14.6%; height: 100%; border-radius: 4px; background: {{t.accent}}"></span></span>
+</div><div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+  <span style="font-size: 15px">Classical</span><span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">22</span>
+  <span style="grid-column: 1 / -1; height: 8px; border-radius: 4px; background: {{t.raised}}; overflow: hidden"><span style="display: block; width: 13.9%; height: 100%; border-radius: 4px; background: {{t.accent}}"></span></span>
+</div><div style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+  <span style="font-size: 15px">Funk and soul</span><span style="font-size: 14px; color: {{t.muted}}; font-variant-numeric: tabular-nums">18</span>
+  <span style="grid-column: 1 / -1; height: 8px; border-radius: 4px; background: {{t.raised}}; overflow: hidden"><span style="display: block; width: 11.4%; height: 100%; border-radius: 4px; background: {{t.accent}}"></span></span>
+</div></div>
+      <h3 style="margin: 10px 0 0; font-size: 13px; font-weight: 600; color: {{t.muted}}">By decade it came out</h3>
+      <div role="img" aria-label="Records by decade" style="display: flex; align-items: flex-end; gap: 6px; height: 140px"><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">1</span>
+  <span style="width: 100%; height: 3px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'30s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">58</span>
+  <span style="width: 100%; height: 40px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'50s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">138</span>
+  <span style="width: 100%; height: 96px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'60s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">63</span>
+  <span style="width: 100%; height: 44px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'70s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">20</span>
+  <span style="width: 100%; height: 14px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'80s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">12</span>
+  <span style="width: 100%; height: 8px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'90s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">7</span>
+  <span style="width: 100%; height: 5px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'00s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">7</span>
+  <span style="width: 100%; height: 5px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'10s</span>
+</div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px">
+  <span style="font-size: 12px; color: {{t.muted}}; font-variant-numeric: tabular-nums">4</span>
+  <span style="width: 100%; height: 3px; border-radius: 4px 4px 0 0; background: {{t.accent}}"></span>
+  <span style="font-size: 12px; font-weight: 600; color: {{t.ink2}}">'20s</span>
+</div></div>
+      <p style="margin: 4px 0 0; font-size: 14px; color: {{t.muted}}">309 on vinyl and one box set.</p>
+    </section>
+  </main>
+</div>
+<nav aria-label="Tabs" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; box-sizing: border-box; padding-bottom: 20px; background: {{t.bg}}; border-top: 1px solid {{t.line}}; display: flex"><a href="#" aria-current="false" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.muted}}; font-size: 12px; font-weight: 500"><span style="width: 60px; height: 32px; border-radius: 16px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"></path></svg></span>Home</a><a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.accent}}; font-size: 12px; font-weight: 600"><span style="width: 60px; height: 32px; border-radius: 16px; background: {{t.accentTint}}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></svg></span>Collection</a><a href="#" aria-current="false" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.muted}}; font-size: 12px; font-weight: 500"><span style="width: 60px; height: 32px; border-radius: 16px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg></span>You</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { t: { bg: '#F7F4ED', card: '#FDFCF9', raised: '#EFEAE2', line: '#DDD5CA', hair: '#E9E3D9', ink: '#251D18', ink2: '#4A3F37', muted: '#6B6057', faint: '#B8AEA3', accent: '#8E3329', accentTint: '#ECE0D9', onAccent: '#FFFFFF', plum: '#894D6B', plumTint: 'rgba(137, 77, 107, 0.12)', ok: '#4F7A4A', okTint: 'rgba(79, 122, 74, 0.12)', skel: '#E9E3D9', scrim: 'rgba(37, 29, 24, 0.40)', shadow: '0 1px 2px rgba(60, 40, 20, 0.10)' } };
+  }
+}
+</script>
+</body>
+</html>

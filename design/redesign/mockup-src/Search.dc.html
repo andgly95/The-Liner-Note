@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F4ED}
+a{color:#8E3329;text-decoration:none}a:hover{color:#6F271F}
+button{font:inherit;cursor:pointer}
+input,textarea{font:inherit}
+input::placeholder,textarea::placeholder{color:#7A6D63}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; overflow: hidden; background: {{t.bg}}; color: {{t.ink}}; font-family: Inter, -apple-system, system-ui, sans-serif; font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased">
+<div style="position: absolute; inset: 0; overflow-y: auto; padding-top: 54px">
+  <div style="display: flex; align-items: center; gap: 8px; padding: 6px 16px 0">
+    <button type="button" aria-label="Back" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; background: transparent; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <div style="flex: 1; min-width: 0; height: 48px; box-sizing: border-box; border-radius: 24px; background: {{t.card}}; box-shadow: inset 0 0 0 1.5px {{t.accent}}; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 16px">
+      <span aria-hidden="true" style="display: flex; color: {{t.muted}}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
+      <input aria-label="Search albums" value="Pink moon" style="flex: 1; min-width: 0; border: 0; background: transparent; color: {{t.ink}}; font-size: 16px; outline: none">
+      <button type="button" aria-label="Clear" style="width: 36px; height: 36px; border: 0; border-radius: 18px; background: {{t.raised}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+    </div>
+  </div>
+  <main style="display: flex; flex-direction: column; gap: 20px; padding: 18px 16px 120px">
+    <section><h2 style="margin: 0 4px 4px; font-size: 13px; font-weight: 600; color: {{t.muted}}">Albums</h2><a href="#" style="display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; background: #6F8578; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; inset: 0"><circle cx="28.0" cy="28.0" r="16.8" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="28.0" cy="28.0" r="10.4" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="28.0" cy="28.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+    <span class="ell" style="font-size: 16px; font-weight: 600">Pink Moon</span>
+    <span class="ell" style="font-size: 14px; color: {{t.muted}}">Nick Drake · 1972</span><span style="align-self: flex-start; margin-top: 4px; height: 24px; padding: 0 8px; border-radius: 12px; background: {{t.plumTint}}; color: {{t.plum}}; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="2"></circle></svg>In your collection</span>
+  </span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; background: #4E5A6E; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; inset: 0"><circle cx="28.0" cy="28.0" r="16.8" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="28.0" cy="28.0" r="10.4" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="28.0" cy="28.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+    <span class="ell" style="font-size: 16px; font-weight: 600">Pink Moon</span>
+    <span class="ell" style="font-size: 14px; color: {{t.muted}}">Silverstein · 2025</span>
+  </span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; background: #3C3540; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; inset: 0"><circle cx="28.0" cy="28.0" r="16.8" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="28.0" cy="28.0" r="10.4" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="28.0" cy="28.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+    <span class="ell" style="font-size: 16px; font-weight: 600">Pink Moon</span>
+    <span class="ell" style="font-size: 14px; color: {{t.muted}}">Tilde · 2021</span>
+  </span>
+</a></section>
+    <section><h2 style="margin: 0 4px 4px; font-size: 13px; font-weight: 600; color: {{t.muted}}">EPs</h2><a href="#" style="display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; background: #C79AA8; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; inset: 0"><circle cx="28.0" cy="28.0" r="16.8" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="28.0" cy="28.0" r="10.4" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="28.0" cy="28.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+    <span class="ell" style="font-size: 16px; font-weight: 600">Pink Moon</span>
+    <span class="ell" style="font-size: 14px; color: {{t.muted}}">Pink Sweat$ · 2022</span>
+  </span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; background: #4A3060; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; inset: 0"><circle cx="28.0" cy="28.0" r="16.8" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="28.0" cy="28.0" r="10.4" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="28.0" cy="28.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+    <span class="ell" style="font-size: 16px; font-weight: 600">Pink Moon</span>
+    <span class="ell" style="font-size: 14px; color: {{t.muted}}">Cartier God · 2024</span>
+  </span>
+</a><a href="#" style="display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-top: 1px solid {{t.hair}}; color: {{t.ink}}">
+  <span aria-hidden="true" style="position: relative; display: block; width: 56px; height: 56px; flex-shrink: 0; border-radius: 8px; background: #D7A3B5; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="56" height="56" viewBox="0 0 56 56" style="position: absolute; inset: 0"><circle cx="28.0" cy="28.0" r="16.8" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="28.0" cy="28.0" r="10.4" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="28.0" cy="28.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span>
+  <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+    <span class="ell" style="font-size: 16px; font-weight: 600">Pink Moon</span>
+    <span class="ell" style="font-size: 14px; color: {{t.muted}}">Täbï Yösha · 2026</span>
+  </span>
+</a></section>
+  </main>
+</div>
+<nav aria-label="Tabs" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; box-sizing: border-box; padding-bottom: 20px; background: {{t.bg}}; border-top: 1px solid {{t.line}}; display: flex"><a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.accent}}; font-size: 12px; font-weight: 600"><span style="width: 60px; height: 32px; border-radius: 16px; background: {{t.accentTint}}; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"></path></svg></span>Home</a><a href="#" aria-current="false" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.muted}}; font-size: 12px; font-weight: 500"><span style="width: 60px; height: 32px; border-radius: 16px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m16 6 4 14"></path><path d="M12 6v14"></path><path d="M8 8v12"></path><path d="M4 4v16"></path></svg></span>Collection</a><a href="#" aria-current="false" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding-top: 8px; color: {{t.muted}}; font-size: 12px; font-weight: 500"><span style="width: 60px; height: 32px; border-radius: 16px; background: transparent; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg></span>You</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { t: { bg: '#F7F4ED', card: '#FDFCF9', raised: '#EFEAE2', line: '#DDD5CA', hair: '#E9E3D9', ink: '#251D18', ink2: '#4A3F37', muted: '#6B6057', faint: '#B8AEA3', accent: '#8E3329', accentTint: '#ECE0D9', onAccent: '#FFFFFF', plum: '#894D6B', plumTint: 'rgba(137, 77, 107, 0.12)', ok: '#4F7A4A', okTint: 'rgba(79, 122, 74, 0.12)', skel: '#E9E3D9', scrim: 'rgba(37, 29, 24, 0.40)', shadow: '0 1px 2px rgba(60, 40, 20, 0.10)' } };
+  }
+}
+</script>
+</body>
+</html>
