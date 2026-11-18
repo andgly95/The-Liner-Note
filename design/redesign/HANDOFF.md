@@ -7,14 +7,25 @@ which has the before screenshots beside the new boards. This folder is design on
 
 ## Before you start
 
-**The branches on GitHub are older than the app this designs for.** They have the
-Roast / Oracle / Mixtape dashboard. The live app, with Home, Collection and You tabs,
-ratings and track ranking, isn't on GitHub. Build in that codebase and bring this
-folder along; it merges anywhere because nothing outside `design/redesign/` changes.
+**Push the Pi's branch first.** The branches on GitHub still have the old Roast / Oracle /
+Mixtape dashboard. The Pi's local branch is ahead of them, with the Home, Collection and You
+app and the shelf work. Push it, retarget this PR at it if it lands on a different branch,
+and build there. This folder merges anywhere, because nothing outside `design/redesign/`
+changes.
 
 **This spec describes behaviour, not file names.** It was written from screenshots of the
 live app, not its code. Where it says "the album page" or "the rating", use whatever
 the live code calls them.
+
+**Reuse what the shelf work already built:**
+
+- **Master years for all 304 masters** are already saved on the Pi. Every year in this spec
+  is the **original** release year, so Browse, the Overview decade chart and the stats sheet
+  read from those, not from a second copy.
+- **The Pi's server copy of the collection** is the cache Browse and Overview should open
+  from.
+- **"Send a friend this collection"** is the existing Share button. It just moves into the new
+  Collection header.
 
 **The boxes come last, and later.** The Kallax boxes are being reorganised now that the
 collection is past 300 records. Every box element in the renders (the box chips, the Box
@@ -45,10 +56,11 @@ art.
 
 1. **Keep the look.** Same tokens, same type: Fraunces 600 for headings and titles, Inter
    for everything else.
-2. **One meaning per colour.** Oxblood `#8E3329` is for actions and your ratings. **Plum
-   `#894D6B` now means "yours"**: owned records, your copy, and later your boxes. Until
-   now it only coloured the decade bars. Green `#4F7A4A` means done ("Listened today").
-   The decade bars and the format bar stop having colours of their own.
+2. **One meaning per colour.** The accent is for actions and your ratings. **A new
+   `--yours` (plum on Paper) means "yours"**: owned records, your copy, and later your boxes.
+   Until now plum only coloured the decade bars. **A new `--done` (green on Paper)** means
+   done ("Listened today"). The decade bars and the format bar stop having colours of their
+   own.
 3. **Sentence case.** "ALBUM", "GENRES", "DECADES" and "FORMATS" become "Album · 1972",
    "What it is" and "By decade". Section labels are 13px, weight 600, muted.
 4. **Fewer boxes.**
@@ -77,6 +89,15 @@ art.
 | accent tint | `#ECE0D9` | The active tab, the quiet "Rate it" pill |
 | plum | `#894D6B`, tint 12% | Owned, your copy, boxes |
 | green | `#4F7A4A`, tint 12% | Done |
+
+**These values are Paper's.** The app has three themes: Paper, the dark theme and Hard Bop.
+`--yours` and `--done` (and their 12% tints) go into **every** theme's block next to its
+accent. Otherwise "one meaning per colour" holds on Paper and breaks on the other two. For
+each theme, pick values that:
+
+- read at 4.5:1 or better against that theme's card,
+- differ from its accent in lightness, not only in hue,
+- keep plum recognisably plum and green recognisably green.
 
 ## Screens
 
@@ -140,7 +161,10 @@ art.
 - **"What it is":**
   - The top five genres as bars with counts. Drop the percentages: they're the same fact
     twice.
-  - "By decade" as a small column chart instead of eight rows.
+  - "By decade" as a small column chart instead of eight rows, **by original release year**.
+    The render has the real figures: one record from the 1930s, then 58, 138, 63, 20, 12, 7,
+    7 and 4 from the 1950s on. The pressing years give a completely different shape, with
+    the 2020s looking like the peak.
   - Format as one sentence ("309 on vinyl and one box set"). "All Media" is a Discogs
     descriptor, not a format, so it doesn't count as one.
 - **The breakdown lives here only.** Today Browse draws it a second time.
@@ -150,7 +174,8 @@ art.
 - **Records first.** Under the header, a sticky toolbar:
   - Search ("Search 311 records").
   - A scrolling row of filter chips: Genre, Decade, Box (step 7), and the sort.
-- **One summary line**, "311 records · 1951–2026", with a **Stats** button that opens 08.
+- **One summary line**, "311 records · 1930s to 2020s" (original years), with a **Stats**
+  button that opens 08.
   The three bar charts that sit above the records today go.
 - **A three-column grid,** so a screen shows 9 records instead of 2. Each has its title,
   artist, and the **original release year**, with the box chip later.
@@ -175,7 +200,8 @@ A sheet from **Stats**, describing exactly what the filters show:
 - The artists with the most records.
 - Later, which boxes they're in.
 
-It replaces the stats that were stacked above Browse's records.
+It replaces the stats that were stacked above Browse's records. The Jazz figures in the
+render are illustrative; 05's are the real ones.
 
 ### 09 Put it in a box (step 7)
 
@@ -186,42 +212,48 @@ shape is settled, but nothing about it should be built yet.
 
 - **Owned or not.** Search, the album page and "Put one on" all need to know whether an
   album is in your Discogs collection.
-  - Discogs collection items carry a `master_id`. If the app's albums can be tied to a
-    Discogs master, match on that.
-  - Otherwise match on normalised artist and title, and accept the odd miss.
+  - **Exact first.** The app's albums are MusicBrainz release groups, and many link straight
+    to their Discogs master through MusicBrainz's URL relationships. The shelf already
+    stores each record's master ID, so most records match exactly.
+  - **Fallback:** normalised artist and title, for release groups with no Discogs link.
   - Do it once per collection sync and keep the result, not per screen.
-- **Original year.** Discogs' `basic_information.year` is the pressing's year. The
-  original is the master's year.
-  - Use the app's own album year when there's a match.
-  - Otherwise fetch the master's year once per master and cache it, minding the 60 a minute
-    limit (a few hundred records is a few minutes, once).
-- **The liner note.** One plain-text note per album per person, stored with that person's
-  rating and listens. Say 2,000 characters.
-- **Cache the collection.** Keep the last full fetch (IndexedDB, or on the server). Open
-  Browse and Overview from it instantly, then sync in the background and show "synced 2 min
-  ago". Only the very first load shows 07.
+- **Original year.** Discogs' `basic_information.year` is the pressing's year, which is
+  what Browse shows today. Use the master years already saved on the Pi.
+- **The liner note** gets its own table: **migration 6** (2 to 5 went to the shelf work).
+  One plain-text note per album per person, up to about 2,000 characters.
+- **The rating scale** becomes a per-person setting, but **each rating keeps the scale it
+  was given on**, as ratings are stored now. The setting only decides how a new rating is
+  entered. Changing it must never reinterpret old ratings: an old rating shows on its own
+  scale until it's re-rated.
+- **The collection cache** is the shelf's server copy. Open Browse and Overview from it
+  instantly, sync in the background, and show "synced 2 min ago". Only the very first load,
+  before that copy exists, shows 07.
 - **Stats** are computed in the browser from the filtered list, as now.
-- **Boxes (step 7):** undecided on purpose. Two ways Discogs can hold them:
-  - One collection **folder per box.** Simple, but a copy can only be in one folder, so
-    folders can't be used for anything else.
-  - A **custom collection field** "Box": a dropdown created once on the Discogs website,
-    set per copy through the collection fields API.
-
-  Either way tablet mode reads the same thing. Decide once the new layout exists.
+- **Boxes (step 7):** still waiting on the new layout. The leading option is a **custom
+  collection field "Box"** on Discogs: a dropdown created once on the website and set per
+  copy through the collection fields API.
+  - Field values arrive with the collection items the Pi already fetches for the shelf, so
+    they cost no extra requests.
+  - The tablet shelf display can show the same box chips from that data.
+  - The alternative, one collection folder per box, works but uses up folders for anything
+    else.
 
 ## Build steps
 
-Each ships on its own.
+Each ships on its own. **Suggested order: 1, then 4.** Browse gains the most from what the
+shelf work already built. The rest follow in any order.
 
 1. **Foundations.** Sentence-case labels, visible empty stars, back buttons and headers on
    inner screens, no card inside a card, the hidden zeros. Mostly CSS and copy.
-2. **Album page.** Logging and rating first, the liner note field and its storage,
-   scale chips to settings, Rank them demoted, hidden zero counts.
+2. **Album page.** Logging and rating first, the liner note field and its table (migration
+   6), the scale chips moved to settings without touching old ratings, Rank them demoted,
+   hidden zero counts.
 3. **Owned matching.** The search chip, the album page's "In your collection" card without
    its box row, and "Put one on" on Home.
 4. **Browse.** The grid first, the sticky toolbar and filter chips without Box, the stats
    sheet, original years.
-5. **Cache and first load.** The cached collection, background sync, placeholders.
+5. **Cache and first load.** Point Browse and Overview at the shelf's server copy, add
+   background sync and the placeholders.
 6. **Overview.** The new header, the segmented control, one breakdown with the decade
    chart, the format sentence.
 7. **Boxes, after they're redone.** Pick the storage, then add the box chips, the Box
