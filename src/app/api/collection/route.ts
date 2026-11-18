@@ -14,8 +14,8 @@ import type { DiscogsCollectionItem, DiscogsSession } from "@/types/discogs";
 const MAX_BROWSER_ITEMS = 2000;
 
 function shape(items: DiscogsCollectionItem[], username: string, isOwnCollection: boolean) {
-  const optimized = optimizeCollectionForLLM(items, username);
   const { years, pending } = yearsFor(items.map((i) => i.basic_information.master_id));
+  const optimized = optimizeCollectionForLLM(items, username, { years });
   return {
     username,
     isOwnCollection,

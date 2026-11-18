@@ -17,7 +17,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 //
 // 3. A floor on `max_tokens`. Opus 5.5 always thinks (it cannot be disabled),
 //    and thinking counts against `max_tokens`. The provider's default of 4096
-//    would leave too little room for the mixtape and listening-guide JSON after
+//    would leave too little room for the listening-guide and analysis JSON after
 //    thinking, and the output would be truncated mid-object.
 const MIN_MAX_TOKENS = 16000;
 

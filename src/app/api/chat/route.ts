@@ -1,6 +1,6 @@
 import { anthropic } from "@/lib/anthropic-client";
 import { streamText } from "ai";
-import { cookies } from "next/headers";
+import { aiUser } from "@/lib/auth/ai-gate";
 import {
   RECORD_SHOP_SYSTEM_PROMPT,
   buildRecordShopPrompt,
@@ -18,10 +18,8 @@ const ephemeralCache = {
 
 export async function POST(req: Request) {
   try {
-    const cookieStore = await cookies();
-    if (!cookieStore.has("discogs_session")) {
-      return Response.json({ error: "Not authenticated" }, { status: 401 });
-    }
+    const gate = await aiUser();
+    if (gate instanceof Response) return gate;
 
     const { messages, collection, wantlist } = await req.json();
 

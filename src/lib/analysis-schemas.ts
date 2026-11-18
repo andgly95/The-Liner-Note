@@ -22,43 +22,34 @@ export const roastResultSchema = z.object({
   }),
 });
 
-export const coreArtistSchema = z.object({
-  name: z.string(),
-  albumCount: z.number().int().nonnegative(),
-  albums: z.array(z.string()).describe("Albums by this artist that the user owns"),
-});
-
-export const missingAlbumSchema = z.object({
-  artist: z.string(),
-  album: z.string(),
-  year: z.number().int(),
-  reason: z.string().describe("Why this album is essential and fits their collection"),
-});
-
-export const gapFillerResultSchema = z.object({
-  coreArtists: z.array(coreArtistSchema).describe("Top 5 artists by number of albums owned"),
-  missingAlbums: z
-    .array(missingAlbumSchema)
-    .describe("10-15 critical missing studio albums distributed across the core artists"),
-});
-
-export const predictedPurchaseSchema = z.object({
-  artist: z.string(),
-  album: z.string(),
-  reason: z.string().describe("Why they will likely buy this next"),
-  source: z.enum(["wantlist", "gap_filler"]),
-});
-
-export const suggestedAdditionSchema = z.object({
-  artist: z.string(),
-  album: z.string(),
-  reason: z.string().describe("Why this connects to their collection"),
-  logic: z.enum(["sideman", "scene", "genre_deep_cut"]),
-});
-
-export const oracleResultSchema = z.object({
-  likelyPurchases: z.array(predictedPurchaseSchema).describe("5 albums the user is most likely to buy next"),
-  suggestedAdds: z.array(suggestedAdditionSchema).describe("5 albums the user does not yet know they want"),
+export const nextResultSchema = z.object({
+  coreArtists: z
+    .array(z.object({ name: z.string(), owned: z.number().int().nonnegative() }))
+    .describe("The 3-5 artists they own the most albums by"),
+  finishTheRun: z
+    .array(
+      z.object({
+        artist: z.string(),
+        album: z.string(),
+        year: z.number().int().nullable(),
+        reason: z.string().describe("Which owned records it sits between or answers"),
+      })
+    )
+    .describe("6-10 studio albums that complete the core artists' runs"),
+  fromWantlist: z
+    .array(z.object({ artist: z.string(), album: z.string(), reason: z.string() }))
+    .describe("Up to 5 records from the wantlist to get first; empty without a wantlist"),
+  discoveries: z
+    .array(
+      z.object({
+        artist: z.string(),
+        album: z.string(),
+        year: z.number().int().nullable(),
+        reason: z.string(),
+        logic: z.enum(["sideman", "scene", "deep_cut"]),
+      })
+    )
+    .describe("5-6 albums they don't know they want yet"),
 });
 
 export const moodPickSchema = z.object({
@@ -94,40 +85,15 @@ export const obscurenessResultSchema = z.object({
   summary: z.string().describe("2-3 sentence character summary"),
   mostMainstream: z.array(obscurenessItemSchema).max(5).describe("Up to 5 most mainstream records"),
   mostObscure: z.array(obscurenessItemSchema).max(5).describe("Up to 5 most obscure records"),
-});
-
-export const mixtapeCandidateSchema = z.object({
-  releaseId: z.number().int().describe("Discogs release ID, exactly as provided in the indexed collection"),
-  artist: z.string(),
-  album: z.string(),
-  why: z.string().describe("One sentence on why this album could contribute a track to the mixtape"),
-});
-
-export const mixtapeCandidatesSchema = z.object({
-  candidates: z.array(mixtapeCandidateSchema).min(6).max(20),
-});
-
-export const mixtapeTrackSchema = z.object({
-  position: z.number().int().min(1).describe("Track number from 1, counted across both sides"),
-  artist: z.string(),
-  album: z.string(),
-  track: z.string().describe("Track title exactly as it appears in the tracklist"),
-  transition: z
-    .string()
-    .describe("Why this track is here — what it does to the listener and how it leads into the next"),
-});
-
-export const mixtapeResultSchema = z.object({
-  title: z.string().describe("Creative title for the mixtape (3-6 words)"),
-  premise: z.string().describe("2-3 sentence opening setting up the arc / vibe"),
-  // Lenient bounds: Opus' natural variance (asymmetric sides, edge cases) shouldn't
-  // fail validation and silently wipe the result. Prompt enforces the actual target.
-  sideA: z.array(mixtapeTrackSchema).min(1).max(8),
-  sideBreak: z
-    .string()
-    .describe("One sentence on what the side flip does — an emotional pivot, a deliberate breath, a key change"),
-  sideB: z.array(mixtapeTrackSchema).min(1).max(8),
-  closing: z.string().describe("1-2 sentence outro on why this is the right place to end"),
+  spread: z
+    .object({
+      household: z.object({ count: z.number().int().nonnegative(), examples: z.array(z.string()).max(3) }).describe("Scores 1-2"),
+      canon: z.object({ count: z.number().int().nonnegative(), examples: z.array(z.string()).max(3) }).describe("Scores 3-4"),
+      genre: z.object({ count: z.number().int().nonnegative(), examples: z.array(z.string()).max(3) }).describe("Scores 5-6"),
+      cult: z.object({ count: z.number().int().nonnegative(), examples: z.array(z.string()).max(3) }).describe("Scores 7-8"),
+      deep: z.object({ count: z.number().int().nonnegative(), examples: z.array(z.string()).max(3) }).describe("Scores 9-10"),
+    })
+    .describe("Every record counted into one band; counts add up to the records listed"),
 });
 
 export const listeningGuideTrackSchema = z.object({
@@ -156,19 +122,9 @@ export const listeningGuideSchema = z.object({
 export type ListeningGuideTrack = z.infer<typeof listeningGuideTrackSchema>;
 export type ListeningGuideResult = z.infer<typeof listeningGuideSchema>;
 
-export type MixtapeCandidate = z.infer<typeof mixtapeCandidateSchema>;
-export type MixtapeCandidatesResult = z.infer<typeof mixtapeCandidatesSchema>;
-export type MixtapeTrack = z.infer<typeof mixtapeTrackSchema>;
-export type MixtapeResult = z.infer<typeof mixtapeResultSchema>;
-
 export type CollectorArchetype = z.infer<typeof collectorArchetypeSchema>;
 export type RoastResult = z.infer<typeof roastResultSchema>;
-export type CoreArtist = z.infer<typeof coreArtistSchema>;
-export type MissingAlbum = z.infer<typeof missingAlbumSchema>;
-export type GapFillerResult = z.infer<typeof gapFillerResultSchema>;
-export type PredictedPurchase = z.infer<typeof predictedPurchaseSchema>;
-export type SuggestedAddition = z.infer<typeof suggestedAdditionSchema>;
-export type OracleResult = z.infer<typeof oracleResultSchema>;
+export type NextResult = z.infer<typeof nextResultSchema>;
 export type MoodPick = z.infer<typeof moodPickSchema>;
 export type MoodResult = z.infer<typeof moodResultSchema>;
 export type ObscurenessItem = z.infer<typeof obscurenessItemSchema>;

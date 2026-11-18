@@ -1,6 +1,7 @@
 import { generateText } from "ai";
 import { anthropic } from "@/lib/anthropic-client";
 import { cookies } from "next/headers";
+import { aiUser } from "@/lib/auth/ai-gate";
 import { discogsClient } from "@/lib/discogs";
 import { listeningGuideSchema } from "@/lib/analysis-schemas";
 import {
@@ -67,6 +68,8 @@ function extractJsonObject(text: string): string {
 
 export async function POST(req: Request) {
   try {
+    const gate = await aiUser();
+    if (gate instanceof Response) return gate;
     const cookieStore = await cookies();
     const sessionCookie = cookieStore.get("discogs_session")?.value;
     if (!sessionCookie) {
@@ -79,7 +82,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Missing releaseId" }, { status: 400 });
     }
 
-    // Tracklist — cached if previously fetched (by Mixtape or a prior guide call).
+    // Tracklist — cached if previously fetched (by a prior guide call).
     let tracklist = getCachedTracklist(releaseId);
     if (!tracklist) {
       const detail = await discogsClient.getReleaseDetail(releaseId, session.tokens);

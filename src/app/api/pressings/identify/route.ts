@@ -4,6 +4,7 @@ import { pressingDetails } from "@/lib/pressing-server";
 import { MAX_IDENTIFY, type PressingDetail } from "@/lib/pressing";
 import { PRESSING_ID_SYSTEM_PROMPT, buildPressingIdPrompt } from "@/lib/prompts";
 import { sessionOrNull, unauthorized } from "../_session";
+import { aiUser } from "@/lib/auth/ai-gate";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -58,6 +59,8 @@ function followUps(raw: unknown, ids: number[]): { role: "assistant" | "user"; c
 }
 
 export async function POST(req: Request) {
+  const gate = await aiUser();
+  if (gate instanceof Response) return gate;
   const session = await sessionOrNull();
   if (!session) return unauthorized();
   const body = await req.json().catch(() => ({}));

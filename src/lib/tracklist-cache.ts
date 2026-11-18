@@ -1,7 +1,7 @@
 // In-memory cache for Discogs tracklists, shared across requests in a single
 // server process. Tracklists are immutable, so there's no expiry — entries just
-// accumulate until restart. The Mixtape Architect's hit rate is the only thing
-// that determines real Discogs API load over time.
+// accumulate until restart. Used by the listening guides; its hit rate is what
+// decides their Discogs API load.
 
 export interface CachedTrack {
   position: string;

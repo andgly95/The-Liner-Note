@@ -4,25 +4,11 @@
 export type {
   CollectorArchetype,
   RoastResult,
-  CoreArtist,
-  MissingAlbum,
-  GapFillerResult,
-  PredictedPurchase,
-  SuggestedAddition,
-  OracleResult,
+  NextResult,
   MoodPick,
   MoodResult,
   ObscurenessItem,
   ObscurenessResult,
 } from "@/lib/analysis-schemas";
 
-import type { GapFillerResult } from "@/lib/analysis-schemas";
-
-export type AnalysisType = "roast" | "gap_filler" | "oracle" | "mood" | "obscureness";
-
-export interface AnalysisRequest {
-  type: AnalysisType;
-  collection: string;
-  wantlist?: string;
-  gapFillerResults?: GapFillerResult;
-}
+export type AnalysisType = "roast" | "next" | "mood" | "obscureness";

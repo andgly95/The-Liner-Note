@@ -14,6 +14,8 @@ const MAX_COLLECTION_TOKENS = 60000;
 const MAX_COLLECTION_CHARS = MAX_COLLECTION_TOKENS * CHARS_PER_TOKEN;
 
 interface OptimizeOptions {
+  /** Original release years by Discogs master id (`master_years`). */
+  years?: Record<number, number>;
   maxTokens?: number;
   prioritizeRecent?: boolean;
   prioritizeHighRated?: boolean;
@@ -24,17 +26,38 @@ interface OptimizeOptions {
  * Compresses a single release into the token-efficient format:
  * "{Artist} - {Album} ({Year}) [{Genre}]"
  */
+/** "The Association (2)" → "The Association", "Ze*" → "Ze", and an artist
+ *  Discogs lists twice ("The Beatles, The Beatles") once. */
+export function cleanArtists(names: string[]): string {
+  const out: string[] = [];
+  for (const n of names) {
+    const c = n.replace(/\s\(\d+\)$/, "").replace(/\*+$/, "").trim();
+    if (c && !out.includes(c)) out.push(c);
+  }
+  return out.join(", ");
+}
+
+/** "Milestones = マイルストーンズ" → "Milestones": Discogs appends the local
+ *  title of a foreign pressing after " = ". */
+export function cleanTitle(title: string): string {
+  const i = title.indexOf(" = ");
+  return i > 0 ? title.slice(0, i).trim() : title;
+}
+
 export function compressRelease(
-  item: DiscogsCollectionItem | DiscogsWantlistItem
+  item: DiscogsCollectionItem | DiscogsWantlistItem,
+  years?: Record<number, number>
 ): CompressedRelease {
   const basic = item.basic_information;
-  const artist = basic.artists.map((a) => a.name).join(", ");
+  const artist = cleanArtists(basic.artists.map((a) => a.name));
   const format = basic.formats?.[0]?.name || "Unknown";
+  // When the album came out (the master's year), not when this copy was pressed.
+  const original = basic.master_id ? years?.[basic.master_id] : undefined;
 
   return {
     artist,
-    album: basic.title,
-    year: basic.year || 0,
+    album: cleanTitle(basic.title),
+    year: original || basic.year || 0,
     genres: basic.genres || [],
     styles: basic.styles || [],
     format,
@@ -106,6 +129,7 @@ export function optimizeCollectionForLLM(
   options: OptimizeOptions = {}
 ): CompressedCollection {
   const {
+    years,
     maxTokens = MAX_COLLECTION_TOKENS,
     prioritizeRecent = true,
     prioritizeHighRated = true,
@@ -114,8 +138,17 @@ export function optimizeCollectionForLLM(
 
   const maxChars = maxTokens * CHARS_PER_TOKEN;
 
-  // Convert all items to compressed format
-  let releases = items.map(compressRelease);
+  // Convert all items to compressed format — a second copy of the same album
+  // is the same album to every tool, so it is listed once.
+  const seen = new Set<string>();
+  let releases = items
+    .map((it) => compressRelease(it, years))
+    .filter((r) => {
+      const k = `${r.artist}|${r.album}`.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
 
   // Sort by score if prioritization is enabled
   if (prioritizeRecent || prioritizeHighRated) {
@@ -187,7 +220,7 @@ export function optimizeWantlistForLLM(
 
   const maxChars = maxTokens * CHARS_PER_TOKEN;
 
-  const releases = items.map(compressRelease);
+  const releases = items.map((it) => compressRelease(it));
   const includedReleases: CompressedRelease[] = [];
   let currentLength = 0;
   let truncated = false;

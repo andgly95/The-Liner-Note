@@ -189,6 +189,18 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX master_groups_rg ON master_groups(rg_mbid);
   `,
+  // 9 — the AI tools' last result per person, per collection looked at
+  // (yours or a friend's), per tool. An Opus run is worth keeping.
+  `
+  CREATE TABLE analyses (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject    TEXT NOT NULL,
+    type       TEXT NOT NULL,
+    result     TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, subject, type)
+  );
+  `,
 ];
 
 let db: Database.Database | null = null;

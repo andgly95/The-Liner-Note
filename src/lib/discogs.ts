@@ -321,7 +321,7 @@ export class DiscogsClient {
 
   /**
    * Get full release detail (incl. tracklist).
-   * Used by the Mixtape Architect to ground sequencing in real tracks.
+   * Used by the listening guides for the real tracklist.
    */
   async getReleaseDetail(
     releaseId: number,

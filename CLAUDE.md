@@ -34,10 +34,20 @@ Collections can be huge; the LLM context isn't. `optimizeCollectionForLLM` compr
 
 ### LLM routes — two distinct patterns
 
-- **`POST /api/analyze`** (`roast` | `gap_filler` | `oracle`): one-shot, expects JSON output. System prompts in `src/lib/prompts.ts` instruct Claude to emit a specific JSON shape; the feature display components (`roast-display.tsx`, `gap-filler-display.tsx`, `oracle-display.tsx`) parse the streamed text. Default model: `claude-opus-5-5`. Every request goes through `src/lib/anthropic-client.ts`, which adapts it for Opus 5.5 (no sampling params, forced tool choice → `auto` + an instruction, `max_tokens` ≥ 16000 because thinking is always on). The `oracle` type chains: it consumes the `gap_filler` JSON output as additional context, so gap_filler must run first to feed it.
+- **`POST /api/analyze`** (`roast` | `next` | `mood` | `obscureness`): one-shot
+  `generateObject` (not streamed — the server checks and keeps the answer
+  first), returns `{result, createdAt}`. Schemas in `analysis-schemas.ts`,
+  prompts in `prompts.ts`. Default model: `claude-opus-5-5`. Every request goes
+  through `src/lib/anthropic-client.ts`, which adapts it for Opus 5.5 (no
+  sampling params, forced tool choice → `auto` + an instruction, `max_tokens` ≥
+  16000 because thinking is always on). See "The AI tools" below.
 - **`POST /api/chat`** (Record Shop): multi-turn conversational, uses `useChat` from `ai/react`. Default model: `claude-opus-5-5`. Collection + wantlist are jammed into the system prompt every turn (no caching). Conversation history persists to `localStorage` only.
 
-Both routes use Vercel AI SDK's `streamText` + `toDataStreamResponse()` and have `maxDuration = 60`. Auth check is just "does `discogs_session` cookie exist and parse" — the tokens are passed implicitly via the cookie that's already in scope, not re-validated against Discogs.
+**Every AI route** (`analyze`, `chat`, `guide`, `pressings/identify`) starts
+with `aiUser()` (`src/lib/auth/ai-gate.ts`): a signed-in account (the signed
+`ln_session`) with Discogs linked, 60 requests per person per hour
+(`AI_REQUESTS_PER_HOUR`). Never gate on `discogs_session` alone — it's
+unsigned, and `discogs_session=x` used to run Opus for anyone.
 
 ### Frontend
 
@@ -289,3 +299,26 @@ their record shelf. Owner turns it on from their profile (`ShelfSettings`).
 - **Artists**: the fourth order ("Artists") is a grid of circles, A–Z; tapping
   one (or the artist name in a record) opens their page — every record, oldest
   first, swiping through only theirs. "A–Z" is records in artist order.
+
+
+## The AI tools (More sheet)
+
+- **What to get next** (`next-display.tsx`, type `next`) replaced Gap filler +
+  the Oracle (the Oracle's "likely purchases" just repeated Gap filler's list):
+  core artists, Finish the run, From your wantlist, You don't know you want
+  these yet (sideman / scene / deep cut). `filterNext` (`next-filter.ts`) drops
+  anything in the collection or wantlist, and wantlist picks not really on it,
+  by `nameKey` over the same "Artist - Album (Year) [Genre]" lines.
+- **Saved runs**: `analyses` (migration 9), one per person × collection
+  username × tool (roast, next, obscureness); `GET /api/analyze?type&subject`.
+  Mood is asked fresh. `tool-frame.tsx` holds `useAnalysis`, the header,
+  running/failed states, "Last run … · Run again" and `AlbumPick`.
+- **Album picks tap through**: `/album/find?artist&title` (route handler) finds
+  the release group on MusicBrainz when tapped (cached), else `/search?q=`.
+  The icon beside it searches Discogs.
+- **The input** (`optimize-collection.ts`): original years from `master_years`
+  (not the pressing's), Discogs "(2)"/"*" and doubled artists cleaned, the
+  " = local title" dropped, a second copy listed once.
+- **Obscureness** also counts every record into five bands (`spread`); that
+  makes it ~55 s instead of ~10.
+- Mixtape was removed (a sequenced tape isn't playable from records).

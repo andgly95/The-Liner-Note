@@ -9,7 +9,6 @@ import { Shell } from "@/components/social/shell";
 import {
   Disc3,
   Flame,
-  Search,
   Sparkles,
   Store,
   RefreshCw,
@@ -17,7 +16,6 @@ import {
   Headphones,
   Telescope,
   Library,
-  ListMusic,
   BookOpen,
   ScanLine,
   Users,
@@ -25,20 +23,17 @@ import {
   X,
 } from "lucide-react";
 import { RoastDisplay } from "@/components/features/roast-display";
-import { GapFillerDisplay } from "@/components/features/gap-filler-display";
-import { OracleDisplay } from "@/components/features/oracle-display";
+import { NextDisplay } from "@/components/features/next-display";
 import { RecordShopChat } from "@/components/features/record-shop-chat";
 import { MoodDisplay } from "@/components/features/mood-display";
 import { ObscurenessDisplay } from "@/components/features/obscureness-display";
 import { CollectionBrowser } from "@/components/features/collection-browser";
-import { MixtapeDisplay } from "@/components/features/mixtape-display";
 import { GuideDisplay } from "@/components/features/guide-display";
 import { PressingFinder } from "@/components/features/pressing-finder";
 import { UserSwitcher } from "@/components/features/user-switcher";
 import { WhatItIs } from "@/components/features/collection-overview";
 import { ShareCollectionButton } from "@/components/social/share-collection";
 import type { CompressedCollection, DiscogsCollectionItem } from "@/types/discogs";
-import type { GapFillerResult } from "@/types/analysis";
 
 interface User {
   id: number;
@@ -87,12 +82,10 @@ const SECTIONS = [
   { value: "pressings", label: "Pressings", icon: ScanLine },
   { value: "browse", label: "Browse", icon: Library },
   { value: "shop", label: "Shop", icon: Store },
-  { value: "mixtape", label: "Mixtape", icon: ListMusic },
   { value: "guides", label: "Guides", icon: BookOpen },
   // The analyses — read your collection back to you.
+  { value: "next", label: "What next", icon: Sparkles, analysis: true },
   { value: "roast", label: "Roast", icon: Flame, analysis: true },
-  { value: "gap_filler", label: "Gap filler", icon: Search, analysis: true },
-  { value: "oracle", label: "Oracle", icon: Sparkles, analysis: true },
   { value: "mood", label: "Mood", icon: Headphones, analysis: true },
   { value: "obscureness", label: "Obscure", icon: Telescope, analysis: true },
 ] as const;
@@ -109,7 +102,6 @@ export default function Dashboard() {
   const [wantlist, setWantlist] = useState<WantlistData | null>(null);
   const [fetchingCollection, setFetchingCollection] = useState(false);
   const [fetchingWantlist, setFetchingWantlist] = useState(false);
-  const [gapFillerResults, setGapFillerResults] = useState<GapFillerResult | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [viewingUser, setViewingUser] = useState<string | null>(null);
   const [needsDiscogs, setNeedsDiscogs] = useState(false);
@@ -126,7 +118,9 @@ export default function Dashboard() {
       return;
     }
     try {
-      const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+      let saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+      // Gap filler and the Oracle became one tool; Mixtape is gone.
+      if (saved === "gap_filler" || saved === "oracle") saved = "next";
       if (saved && VALID_TABS.has(saved)) setActiveTab(saved);
     } catch {
       // localStorage unavailable — ignore
@@ -310,7 +304,6 @@ export default function Dashboard() {
     setViewingUser(username);
     setCollection(null);
     setWantlist(null);
-    setGapFillerResults(null);
     // Fetch the selected user's data
     fetchCollection(username);
     fetchWantlist(username);
@@ -533,31 +526,22 @@ export default function Dashboard() {
       {activeTab === "shop" && (
         <RecordShopChat collectionString={collectionString} wantlistString={wantlist?.wantlistString} isReady={!!collection} />
       )}
-      {activeTab === "mixtape" && <MixtapeDisplay items={collection?.raw} isReady={!!collection} />}
       {activeTab === "guides" && <GuideDisplay items={collection?.raw} isReady={!!collection} />}
       {activeTab === "roast" && (
-        <RoastDisplay collectionString={collectionString} username={collection?.username} isReady={!!collection} />
+        <RoastDisplay collectionString={collectionString} subject={collection?.username} isReady={!!collection} />
       )}
-      {activeTab === "gap_filler" && (
-        <GapFillerDisplay
+      {activeTab === "next" && (
+        <NextDisplay
           collectionString={collectionString}
-          username={collection?.username}
-          isReady={!!collection}
-          onResultsReceived={setGapFillerResults}
-        />
-      )}
-      {activeTab === "oracle" && (
-        <OracleDisplay
-          collectionString={collectionString}
-          username={collection?.username}
           wantlistString={wantlist?.wantlistString}
-          gapFillerResults={gapFillerResults}
+          wantlistReady={!fetchingWantlist}
+          subject={collection?.username}
           isReady={!!collection}
         />
       )}
       {activeTab === "mood" && <MoodDisplay collectionString={collectionString} isReady={!!collection} />}
       {activeTab === "obscureness" && (
-        <ObscurenessDisplay collectionString={collectionString} username={collection?.username} isReady={!!collection} />
+        <ObscurenessDisplay collectionString={collectionString} subject={collection?.username} isReady={!!collection} />
       )}
       {friendsOpen && (
         <Sheet title="A friend's collection" onClose={() => setFriendsOpen(false)}>
