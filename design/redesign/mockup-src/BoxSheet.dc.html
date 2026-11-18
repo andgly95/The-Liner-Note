@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Put it in a box</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F7F4ED}
+a{color:#8E3329;text-decoration:none}a:hover{color:#6F271F}
+button{font:inherit;cursor:pointer}
+input,textarea{font:inherit}
+input::placeholder,textarea::placeholder{color:#7A6D63}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc>*{flex-shrink:0}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; box-sizing: border-box; overflow: hidden; background: {{t.bg}}; color: {{t.ink}}; font-family: Inter, -apple-system, system-ui, sans-serif; font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased">
+<div aria-hidden="true" style="position: absolute; inset: 0; overflow: hidden"><div style="position: relative; padding: 54px 0 22px; background: rgba(111, 133, 120, 0.16)">
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 0">
+    <button type="button" aria-label="Back" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m15 18-6-6 6-6"></path></svg></button>
+    <div style="display: flex; gap: 8px"><button type="button" aria-label="Share" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="m16 6-4-4-4 4"></path><path d="M12 2v13"></path></svg></button><button type="button" aria-label="More" style="width: 44px; height: 44px; flex-shrink: 0; border: 0; border-radius: 22px; box-shadow: inset 0 0 0 1px {{t.line}}; background: {{t.card}}; color: {{t.ink2}}; padding: 0; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button></div>
+  </div>
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 24px 0; text-align: center">
+    <span style="box-shadow: 0 12px 28px rgba(37, 29, 24, 0.22); border-radius: 10px"><span aria-hidden="true" style="position: relative; display: block; width: 210px; height: 210px; flex-shrink: 0; border-radius: 10px; background: #6F8578; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="210" height="210" viewBox="0 0 210 210" style="position: absolute; inset: 0"><circle cx="105.0" cy="105.0" r="63.0" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="3.5"></circle><circle cx="105.0" cy="105.0" r="39.1" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="105.0" cy="105.0" r="5.2" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span></span>
+    <span style="margin-top: 16px; font-size: 13px; font-weight: 500; color: {{t.muted}}">Album · 1972</span>
+    <h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-size: 36px; line-height: 1.1; font-weight: 600; letter-spacing: -0.015em">Pink Moon</h1>
+    <a href="#" style="font-size: 17px; font-weight: 600; color: {{t.ink}}">Nick Drake</a>
+  </div>
+</div></div><div style="position: absolute; inset: 0; background: {{t.scrim}}"></div><section role="dialog" aria-label="Put it in a box" style="position: absolute; left: 0; right: 0; bottom: 0; top: 300px; border-radius: 24px 24px 0 0; background: {{t.card}}; display: flex; flex-direction: column">
+  <div aria-hidden="true" style="align-self: center; width: 40px; height: 5px; border-radius: 3px; background: {{t.line}}; margin-top: 8px"></div>
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 6px 8px 0; min-height: 52px">
+    <button type="button" style="justify-self: start; height: 44px; padding: 0 12px; border: 0; background: transparent; color: {{t.ink2}}; font-size: 16px">Cancel</button>
+    <h2 style="margin: 0; font-size: 16px; font-weight: 600">Which box?</h2><span></span>
+  </div>
+  <div class="sc" style="flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 8px 16px 0">
+    <div style="display: flex; align-items: center; gap: 12px"><span aria-hidden="true" style="position: relative; display: block; width: 48px; height: 48px; flex-shrink: 0; border-radius: 6px; background: #6F8578; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); overflow: hidden"><svg width="48" height="48" viewBox="0 0 48 48" style="position: absolute; inset: 0"><circle cx="24.0" cy="24.0" r="14.4" fill="none" stroke="rgba(255, 255, 255, 0.16)" stroke-width="1.0"></circle><circle cx="24.0" cy="24.0" r="8.9" fill="none" stroke="rgba(255, 255, 255, 0.10)" stroke-width="1"></circle><circle cx="24.0" cy="24.0" r="2.0" fill="rgba(255, 255, 255, 0.22)"></circle></svg></span><span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 600">Pink Moon</span><span style="font-size: 14px; color: {{t.muted}}">Nick Drake · 1972 · folk</span></span></div>
+    <div role="group" aria-label="Boxes on the Kallax" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 6px; border-radius: 10px; background: #C9B9A4"><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T1</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">25</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">60s pop and rock</span>
+</button><button type="button" aria-pressed="true" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.plum}}; box-shadow: inset 0 0 0 1px {{t.plum}}; color: #FFFFFF; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T2</span><span style="font-size: 12px; font-weight: 600; color: #FFFFFF">27</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: #FFFFFF">70s rock and prog</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T3</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">20</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">90s and 2000s</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">T4</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">20</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Vocal pop and city pop</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B1</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">34</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Miles and Coltrane</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B2</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">35</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Bebop and hard bop</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B3</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">31</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Modal, fusion, free</span>
+</button><button type="button" aria-pressed="false" style="aspect-ratio: 1; border: 0; border-radius: 6px; background: {{t.card}}; box-shadow: inset 0 0 0 1px {{t.line}}; color: {{t.ink}}; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: left">
+  <span style="display: flex; align-items: baseline; justify-content: space-between"><span style="font-family: Fraunces, Georgia, serif; font-size: 20px; font-weight: 600">B4</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">35</span></span>
+  <span style="font-size: 11px; line-height: 1.25; color: {{t.muted}}">Classical and early jazz</span>
+</button></div>
+    <p style="margin: 0; font-size: 13.5px; color: {{t.muted}}">Saved to the record on Discogs, so tablet mode can find it too.</p>
+  </div>
+  <div style="padding: 12px 16px 30px"><button type="button" style="width: 100%; height: 52px; border: 0; border-radius: 26px; background: {{t.plum}}; color: #FFFFFF; font-size: 16px; font-weight: 600">Put it in T2</button></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { t: { bg: '#F7F4ED', card: '#FDFCF9', raised: '#EFEAE2', line: '#DDD5CA', hair: '#E9E3D9', ink: '#251D18', ink2: '#4A3F37', muted: '#6B6057', faint: '#B8AEA3', accent: '#8E3329', accentTint: '#ECE0D9', onAccent: '#FFFFFF', plum: '#894D6B', plumTint: 'rgba(137, 77, 107, 0.12)', ok: '#4F7A4A', okTint: 'rgba(79, 122, 74, 0.12)', skel: '#E9E3D9', scrim: 'rgba(37, 29, 24, 0.40)', shadow: '0 1px 2px rgba(60, 40, 20, 0.10)' } };
+  }
+}
+</script>
+</body>
+</html>
