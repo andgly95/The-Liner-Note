@@ -19,11 +19,11 @@ the live code calls them.
 
 **Reuse what the shelf work already built:**
 
-- **Master years for all 304 masters** are already saved on the Pi. Every year in this spec
-  is the **original** release year, so Browse, the Overview decade chart and the stats sheet
-  read from those, not from a second copy.
-- **The Pi's server copy of the collection** is the cache Browse and Overview should open
-  from.
+- **Master years.** Every year in this spec is the **original** release year. The Pi already
+  stores master years for everyone and has all 304 of yours, so Browse, the Overview decade
+  chart and the stats sheet read from that store, not from a second copy.
+- **The shelf's server copy of the collection** is the pattern to copy for the cache (see Data).
+  Don't reuse it directly: it only exists while sharing is on.
 - **"Send a friend this collection"** is the existing Share button. It just moves into the new
   Collection header.
 
@@ -57,9 +57,9 @@ art.
 1. **Keep the look.** Same tokens, same type: Fraunces 600 for headings and titles, Inter
    for everything else.
 2. **One meaning per colour.** The accent is for actions and your ratings. **A new
-   `--yours` (plum on Paper) means "yours"**: owned records, your copy, and later your boxes.
-   Until now plum only coloured the decade bars. **A new `--done` (green on Paper)** means
-   done ("Listened today"). The decade bars and the format bar stop having colours of their
+   `--yours` (plum in the Liner notes theme) means "yours"**: owned records, your copy, and
+   later your boxes. Until now plum only coloured the decade bars. **A new `--done` (green)**
+   means done ("Listened today"). The decade bars and the format bar stop having colours of their
    own.
 3. **Sentence case.** "ALBUM", "GENRES", "DECADES" and "FORMATS" become "Album · 1972",
    "What it is" and "By decade". Section labels are 13px, weight 600, muted.
@@ -90,10 +90,11 @@ art.
 | plum | `#894D6B`, tint 12% | Owned, your copy, boxes |
 | green | `#4F7A4A`, tint 12% | Done |
 
-**These values are Paper's.** The app has three themes: Paper, the dark theme and Hard Bop.
-`--yours` and `--done` (and their 12% tints) go into **every** theme's block next to its
-accent. Otherwise "one meaning per colour" holds on Paper and breaks on the other two. For
-each theme, pick values that:
+**These values are the Liner notes theme's**, the default. The theme picker offers two
+themes, **Liner notes** and **Hard Bop**. The stylesheet also has a dark colour set that
+nothing can select yet. `--yours` and `--done` (and their 12% tints) go into **all three**
+blocks next to the accent: Hard Bop so the rule holds there, the dark set so it's ready if it
+ever gets a place in the picker. For each, pick values that:
 
 - read at 4.5:1 or better against that theme's card,
 - differ from its accent in lightness, not only in hue,
@@ -218,16 +219,26 @@ shape is settled, but nothing about it should be built yet.
   - **Fallback:** normalised artist and title, for release groups with no Discogs link.
   - Do it once per collection sync and keep the result, not per screen.
 - **Original year.** Discogs' `basic_information.year` is the pressing's year, which is
-  what Browse shows today. Use the master years already saved on the Pi.
+  what Browse shows today. Use the stored master years. Today the Pi only fetches them for
+  shared collections, so the fetch moves to the per-person copy below, and anyone who never
+  shares gets them too.
 - **The liner note** gets its own table: **migration 6** (2 to 5 went to the shelf work).
   One plain-text note per album per person, up to about 2,000 characters.
 - **The rating scale** becomes a per-person setting, but **each rating keeps the scale it
   was given on**, as ratings are stored now. The setting only decides how a new rating is
   entered. Changing it must never reinterpret old ratings: an old rating shows on its own
   scale until it's re-rated.
-- **The collection cache** is the shelf's server copy. Open Browse and Overview from it
-  instantly, sync in the background, and show "synced 2 min ago". Only the very first load,
-  before that copy exists, shows 07.
+- **The collection cache** is a server copy for **every Discogs-linked person, separate from
+  sharing**. The shelf's copy only exists while sharing is on, and turning sharing off deletes
+  it along with the stored Discogs tokens, by design. Someone who never shares must still get
+  an instant Browse.
+  - Build the same kind of copy per person, and keep it whether or not they share.
+  - Refresh it with their own session while they have the app open. **Don't store tokens for
+    it**: keeping tokens stays a sharing feature.
+  - Open Browse and Overview from it instantly, sync in the background, and show "synced 2
+    min ago".
+  - Fetch master years for it, as the shelf does.
+  - Only the very first load, before a copy exists, shows 07.
 - **Stats** are computed in the browser from the filtered list, as now.
 - **Boxes (step 7):** still waiting on the new layout. The leading option is a **custom
   collection field "Box"** on Discogs: a dropdown created once on the website and set per
@@ -251,9 +262,10 @@ shelf work already built. The rest follow in any order.
 3. **Owned matching.** The search chip, the album page's "In your collection" card without
    its box row, and "Put one on" on Home.
 4. **Browse.** The grid first, the sticky toolbar and filter chips without Box, the stats
-   sheet, original years.
-5. **Cache and first load.** Point Browse and Overview at the shelf's server copy, add
-   background sync and the placeholders.
+   sheet, original years. This includes the per-person collection copy, separate from
+   sharing, and master years fetched for it. Browse needs both.
+5. **Cache and first load.** Open Overview from the per-person copy too, add the "synced"
+   line, background sync while the app is open, and the placeholders.
 6. **Overview.** The new header, the segmented control, one breakdown with the decade
    chart, the format sentence.
 7. **Boxes, after they're redone.** Pick the storage, then add the box chips, the Box
