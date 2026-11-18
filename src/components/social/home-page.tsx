@@ -96,11 +96,11 @@ export function HomePage() {
           </div>
           {searchError && <p className="text-sm text-destructive">{searchError}</p>}
           {hits && (
-            <ul className="divide-y rounded-xl border bg-card overflow-hidden">
-              {hits.length === 0 && <li className="p-4 text-sm text-muted-foreground">Nothing by that name.</li>}
+            <ul className="divide-y border-y">
+              {hits.length === 0 && <li className="py-4 px-1 text-sm text-muted-foreground">Nothing by that name.</li>}
               {hits.map((h) => (
                 <li key={h.mbid}>
-                  <Link href={`/album/${h.mbid}`} className="flex items-center gap-3 p-2.5 hover:bg-accent">
+                  <Link href={`/album/${h.mbid}`} className="flex items-center gap-3 py-2.5 px-1 hover:bg-accent">
                     <Cover mbid={h.mbid} className="w-12 shrink-0" />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-medium truncate">{h.title}</span>
@@ -139,9 +139,9 @@ export function HomePage() {
           {activity.length === 0 ? (
             <p className="text-sm text-muted-foreground">Nobody has logged anything yet — be the first.</p>
           ) : (
-            <ul className="divide-y rounded-xl border bg-card overflow-hidden">
+            <ul className="divide-y border-y">
               {activity.map((a) => (
-                <li key={`${a.handle}-${a.mbid}`} className="flex items-center gap-3 p-2.5">
+                <li key={`${a.handle}-${a.mbid}`} className="flex items-center gap-3 py-2.5 px-1">
                   <Link href={`/u/${a.handle}`} aria-label={a.name}>
                     <Avatar className="w-8 h-8">
                       <AvatarImage src={a.avatar_url ?? undefined} alt="" />

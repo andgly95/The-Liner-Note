@@ -48,7 +48,7 @@ export function StarsDisplay({ value, className = "w-3.5 h-3.5" }: { value: numb
         ) : value >= i - 0.5 ? (
           <StarHalf key={i} className={`${className} fill-current`} />
         ) : (
-          <Star key={i} className={`${className} opacity-25`} />
+          <Star key={i} className={`${className} text-muted-foreground/60`} />
         )
       )}
     </span>
@@ -71,7 +71,7 @@ export function StarsInput({ value, onChange, disabled }: { value: number | null
           ) : shown >= i - 0.5 ? (
             <StarHalf className="w-full h-full fill-current" />
           ) : (
-            <Star className="w-full h-full opacity-25" />
+            <Star className="w-full h-full text-muted-foreground" strokeWidth={1.5} />
           )}
           {[i - 0.5, i].map((v, half) => (
             <button

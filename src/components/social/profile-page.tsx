@@ -84,21 +84,21 @@ export function ProfilePage({ handle }: { handle: string }) {
 
       {isMe && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Theme</h2>
+          <h2 className="section-label">Theme</h2>
           <ThemePicker />
         </section>
       )}
 
       {isMe && linked.includes("discogs") && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Share your collection</h2>
+          <h2 className="section-label">Share your collection</h2>
           <ShelfSettings />
         </section>
       )}
 
       {isMe && (
         <section className="space-y-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">App</h2>
+          <h2 className="section-label">App</h2>
           <InstallAction />
         </section>
       )}

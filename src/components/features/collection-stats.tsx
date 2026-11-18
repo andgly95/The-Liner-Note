@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3 } from "lucide-react";
 import { getCollectionStats } from "@/lib/optimize-collection";
 import type { CompressedCollection } from "@/types/discogs";
 
@@ -24,7 +23,7 @@ function BarRow({ label, count, total, color }: BarRowProps) {
       <div className="flex justify-between text-xs">
         <span className="font-medium truncate pr-2">{label}</span>
         <span className="text-muted-foreground tabular-nums shrink-0">
-          {count} · {pct}%
+          {count}{pct > 0 && ` · ${pct}%`}
         </span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -56,20 +55,19 @@ export function CollectionStats({ collection }: CollectionStatsProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <BarChart3 className="w-5 h-5" />
-          Collection Breakdown
+        <CardTitle className="font-display text-lg font-semibold">
+          What it is
         </CardTitle>
-        <CardDescription>
-          Based on {total.toLocaleString()} prioritized item{total === 1 ? "" : "s"}
-          {collection.truncated && collection.truncatedAt
-            ? ` (top ${collection.truncatedAt.toLocaleString()} of ${collection.totalItems.toLocaleString()})`
-            : ""}
-        </CardDescription>
+        {/* Only worth saying when it isn't the whole collection. */}
+        {collection.truncated && collection.truncatedAt ? (
+          <CardDescription>
+            The top {collection.truncatedAt.toLocaleString()} of {collection.totalItems.toLocaleString()} records
+          </CardDescription>
+        ) : null}
       </CardHeader>
       <CardContent className="grid md:grid-cols-3 gap-6">
         <div>
-          <h4 className="text-sm font-semibold mb-3">Top Genres</h4>
+          <h4 className="section-label mb-3">Top genres</h4>
           <div className="space-y-2">
             {topGenres.length === 0 ? (
               <p className="text-xs text-muted-foreground">No genre data</p>
@@ -87,7 +85,7 @@ export function CollectionStats({ collection }: CollectionStatsProps) {
           </div>
         </div>
         <div>
-          <h4 className="text-sm font-semibold mb-3">By Decade</h4>
+          <h4 className="section-label mb-3">By decade</h4>
           <div className="space-y-2">
             {topDecades.length === 0 ? (
               <p className="text-xs text-muted-foreground">No year data</p>
@@ -105,7 +103,7 @@ export function CollectionStats({ collection }: CollectionStatsProps) {
           </div>
         </div>
         <div>
-          <h4 className="text-sm font-semibold mb-3">Format</h4>
+          <h4 className="section-label mb-3">By format</h4>
           <div className="space-y-2">
             {topFormats.length === 0 ? (
               <p className="text-xs text-muted-foreground">No format data</p>

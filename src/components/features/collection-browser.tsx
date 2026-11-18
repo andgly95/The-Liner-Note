@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Library, Search, Disc3, Star, Shuffle, X, Loader2 } from "lucide-react";
+import { Search, Disc3, Star, Shuffle, X, Loader2 } from "lucide-react";
 import type { DiscogsCollectionItem } from "@/types/discogs";
 
 interface CollectionBrowserProps {
@@ -61,7 +60,7 @@ function SliceBars({
   if (entries.length === 0) return null;
   return (
     <div>
-      <h4 className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide">
+      <h4 className="section-label mb-2">
         {title}
       </h4>
       <div className="space-y-1.5">
@@ -189,37 +188,26 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
 
   if (!isReady) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Library className="w-5 h-5 text-primary" />
-            Browse Collection
-          </CardTitle>
-          <CardDescription>Loading your collection...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
+      <section className="space-y-2">
+        <h2 className="font-display text-xl font-semibold">Browse</h2>
+        <p className="text-sm text-muted-foreground">Loading your collection…</p>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </section>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Library className="w-5 h-5 text-primary" />
-          Browse Collection
-        </CardTitle>
-        <CardDescription>
-          Search, filter, and sort {totalItems.toLocaleString()} records — the stats below recompute for whatever
-          slice you&apos;re looking at.
-          {allItems.length < totalItems && ` (browsing the first ${allItems.length.toLocaleString()})`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="font-display text-xl font-semibold">Browse</h2>
+        <p className="text-sm text-muted-foreground">
+          Search, filter and sort {totalItems.toLocaleString()} records. The numbers below follow whatever you&apos;re
+          looking at.
+          {allItems.length < totalItems && ` Browsing the first ${allItems.length.toLocaleString()}.`}
+        </p>
+      </div>
         {/* Controls */}
         <div className="flex flex-col md:flex-row md:flex-wrap gap-2 md:items-center">
           <div className="relative md:flex-1 md:min-w-[180px]">
@@ -300,7 +288,7 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
                 {artistName(pick)} — {pick.basic_information.title}
               </div>
               <div className="text-xs text-muted-foreground">
-                {pick.basic_information.year || "????"} · {primaryGenre(pick)} · {primaryFormat(pick)}
+                {[pick.basic_information.year || null, primaryGenre(pick), primaryFormat(pick)].filter(Boolean).join(" · ")}
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={surprise}>
@@ -310,7 +298,7 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
         )}
 
         {/* Stats summary */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm rounded-lg border p-3 bg-muted/30">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm border-y py-3">
           <div>
             <div className="text-xs text-muted-foreground mb-1">Showing</div>
             <div className="font-semibold">
@@ -318,34 +306,35 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
               <span className="text-muted-foreground font-normal">of {allItems.length.toLocaleString()}</span>
             </div>
           </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">Year range</div>
-            <div className="font-semibold">
-              {stats.yearRange ? `${stats.yearRange[0]}–${stats.yearRange[1]}` : "—"}
+          {stats.yearRange && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Year range</div>
+              <div className="font-semibold">{`${stats.yearRange[0]}–${stats.yearRange[1]}`}</div>
             </div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">Avg rating</div>
-            <div className="font-semibold">
-              {stats.avgRating ? `${stats.avgRating.toFixed(1)} ★` : "—"}
-              {stats.ratedCount > 0 && (
+          )}
+          {/* Only when something in view has a rating — no "Avg rating —". */}
+          {stats.avgRating ? (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Average rating</div>
+              <div className="font-semibold">
+                {stats.avgRating.toFixed(1)} ★
                 <span className="text-muted-foreground font-normal text-xs"> ({stats.ratedCount})</span>
-              )}
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">Top artist</div>
-            <div className="font-semibold truncate">
-              {stats.topArtist ? `${stats.topArtist[0]} (${stats.topArtist[1]})` : "—"}
+          ) : null}
+          {stats.topArtist && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Top artist</div>
+              <div className="font-semibold truncate">{`${stats.topArtist[0]} (${stats.topArtist[1]})`}</div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Breakdown bars for the current slice */}
         <div className="grid md:grid-cols-3 gap-4">
-          <SliceBars title="Genres" entries={stats.topGenres} total={filtered.length} color="bg-primary" />
-          <SliceBars title="Decades" entries={stats.topDecades} total={filtered.length} color="bg-chart-2" />
-          <SliceBars title="Formats" entries={stats.topFormats} total={filtered.length} color="bg-chart-3" />
+          <SliceBars title="By genre" entries={stats.topGenres} total={filtered.length} color="bg-primary" />
+          <SliceBars title="By decade" entries={stats.topDecades} total={filtered.length} color="bg-chart-2" />
+          <SliceBars title="By format" entries={stats.topFormats} total={filtered.length} color="bg-chart-3" />
         </div>
 
         {/* Results */}
@@ -391,9 +380,9 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
                       <div className="text-muted-foreground truncate" title={it.basic_information.title}>
                         {it.basic_information.title}
                       </div>
-                      <div className="text-muted-foreground/70 text-[11px]">
-                        {it.basic_information.year || "????"}
-                      </div>
+                      {it.basic_information.year > 0 && (
+                        <div className="text-muted-foreground text-[11px]">{it.basic_information.year}</div>
+                      )}
                     </div>
                   </div>
                 );
@@ -401,7 +390,6 @@ export function CollectionBrowser({ items, totalItems, isReady }: CollectionBrow
             </div>
           )}
         </ScrollArea>
-      </CardContent>
-    </Card>
+    </section>
   );
 }

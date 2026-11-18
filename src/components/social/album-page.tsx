@@ -3,14 +3,14 @@
 // One album: what it is, what you thought of it, and what everyone thinks.
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Headphones, Check, Lock, ListOrdered, Users, Loader2, Pencil } from "lucide-react";
+import { Headphones, Check, Lock, ListOrdered, Users, Loader2, Pencil, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Cover, StarsDisplay, StarsInput } from "./bits";
 import { RankEditor, fmtLength } from "./rank-editor";
 import { useMe } from "./me";
-import { useSignInPrompt } from "./shell";
+import { HeaderActions, useSignInPrompt } from "./shell";
 import { RANK_MODES } from "@/lib/scales";
 
 interface Track { key: string; idx: number; disc: number; number: string; title: string; length_ms: number | null }
@@ -85,13 +85,35 @@ export function AlbumPage({ mbid }: { mbid: string }) {
         ? community.tracks.map((c) => byKey.get(c.key)!).filter(Boolean)
         : album.tracks;
 
+  const share = async () => {
+    const url = window.location.href;
+    const title = `${album.title} by ${album.artist}`;
+    try {
+      if (navigator.share) return await navigator.share({ title, url });
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied" });
+    } catch {
+      toast({ title: "Here's the link", description: url });
+    }
+  };
+
   return (
     <div className="space-y-5">
+      <HeaderActions>
+        <button onClick={share} aria-label="Share this album" className="w-11 h-11 inline-flex items-center justify-center rounded-full hover:bg-accent">
+          <Share className="w-5 h-5" />
+        </button>
+      </HeaderActions>
+
       {/* The album */}
       <section className="flex gap-4 items-end">
         <Cover mbid={album.mbid} size={500} className="w-32 sm:w-44 shrink-0 shadow-md" alt={`${album.title} cover`} />
         <div className="min-w-0 pb-1">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">{[album.type, album.secondary].filter(Boolean).join(" · ") || "Album"}</div>
+          <div className="section-label">{[[album.type, album.secondary].filter(Boolean).join(", ") || "Album", album.year].filter(Boolean).join(" · ")}</div>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold leading-tight">{album.title}</h1>
           <div className="mt-1 text-sm">
             {album.artist_mbid ? (
@@ -99,20 +121,22 @@ export function AlbumPage({ mbid }: { mbid: string }) {
             ) : (
               <span className="font-medium">{album.artist}</span>
             )}
-            {album.year && <span className="text-muted-foreground"> · {album.year}</span>}
           </div>
-          <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-            {stats.avgScore !== null ? (
-              <>
-                <StarsDisplay value={Math.round(stats.avgScore / 10) / 2} />
-                <span className="tabular-nums">{(stats.avgScore / 20).toFixed(1)}</span>
-                <span>· {stats.ratings} {stats.ratings === 1 ? "rating" : "ratings"}</span>
-              </>
-            ) : (
-              <span>No ratings yet</span>
-            )}
-            <span>· {stats.listeners} {stats.listeners === 1 ? "listener" : "listeners"}</span>
-          </div>
+          {/* Only what there is: no "No ratings yet", no "0 listeners". */}
+          {(stats.avgScore !== null || stats.listeners > 0) && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              {stats.avgScore !== null && (
+                <>
+                  <StarsDisplay value={Math.round(stats.avgScore / 10) / 2} />
+                  <span className="tabular-nums">{(stats.avgScore / 20).toFixed(1)}</span>
+                  <span>· {stats.ratings} {stats.ratings === 1 ? "rating" : "ratings"}</span>
+                </>
+              )}
+              {stats.listeners > 0 && (
+                <span>{stats.avgScore !== null && "· "}{stats.listeners} {stats.listeners === 1 ? "listener" : "listeners"}</span>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -210,7 +234,7 @@ export function AlbumPage({ mbid }: { mbid: string }) {
                 </button>
               ))}
             </div>
-            <ol className="divide-y rounded-lg border bg-card">
+            <ol className="divide-y border-y">
               {orderFor(tab).map((t, i) => {
                 const c = tab === "community" ? community.tracks[i] : null;
                 const ranked = tab !== "album";
@@ -218,9 +242,9 @@ export function AlbumPage({ mbid }: { mbid: string }) {
                 return (
                   <li key={t.key}>
                     {tab === "album" && multiDisc && t.disc !== prevDisc && (
-                      <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Disc {t.disc}</div>
+                      <div className="px-1 pt-3 pb-1 section-label">Disc {t.disc}</div>
                     )}
-                    <div className="flex items-center gap-3 px-3 py-2.5">
+                    <div className="flex items-center gap-3 px-1 py-2.5">
                       <span className={`w-7 shrink-0 text-right tabular-nums ${ranked ? `font-display text-lg ${i < 3 ? "text-primary font-semibold" : "text-muted-foreground"}` : "text-sm text-muted-foreground"}`}>
                         {ranked ? i + 1 : t.number}
                       </span>
@@ -248,10 +272,10 @@ export function AlbumPage({ mbid }: { mbid: string }) {
       {view.recent.length > 0 && (
         <section className="space-y-2">
           <h2 className="font-display text-xl font-semibold flex items-center gap-2"><Users className="w-4 h-4" /> Listeners</h2>
-          <ul className="divide-y rounded-lg border bg-card">
+          <ul className="divide-y border-y">
             {view.recent.map((r) => (
               <li key={r.handle}>
-                <Link href={`/u/${r.handle}`} className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent">
+                <Link href={`/u/${r.handle}`} className="flex items-center gap-3 px-1 py-2.5 hover:bg-accent">
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={r.avatar_url ?? undefined} alt="" />
                     <AvatarFallback>{r.name[0]?.toUpperCase()}</AvatarFallback>

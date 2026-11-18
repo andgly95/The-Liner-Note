@@ -58,6 +58,10 @@ const config = {
           3: "hsl(var(--chart-3) / <alpha-value>)",
           4: "hsl(var(--chart-4) / <alpha-value>)",
         },
+        // One meaning each (design/redesign): "yours" = owned records, your
+        // copy; "done" = finished ("Listened today"). Tints: bg-yours/12.
+        yours: "hsl(var(--yours) / <alpha-value>)",
+        done: "hsl(var(--done) / <alpha-value>)",
         vinyl: {
           DEFAULT: "hsl(var(--vinyl))",
           foreground: "hsl(var(--vinyl-foreground))",

@@ -86,7 +86,7 @@ export function UserSwitcher({ currentUser, viewingUser, onUserSelect }: UserSwi
                   Viewing: {viewingUser}
                 </span>
               ) : (
-                "Your Collection"
+                "Your collection"
               )}
             </CardTitle>
           </div>
@@ -198,7 +198,7 @@ export function UserSwitcher({ currentUser, viewingUser, onUserSelect }: UserSwi
                 className="w-full"
                 onClick={() => onUserSelect(null)}
               >
-                View My Collection
+                View my collection
               </Button>
             </>
           )}

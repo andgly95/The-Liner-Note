@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  /* Liner notes: warm paper, oxblood ink, a plum and a sage for charts.
+  /* Liner notes: warm paper, oxblood ink, plum for "yours", green for "done".
      Every colour in the app comes from these, so this block IS the theme. */
   :root {
     --background: 38 38% 95%;
@@ -32,6 +32,9 @@
     --chart-2: 330 28% 42%;
     --chart-3: 26 72% 46%;
     --chart-4: 140 18% 36%;
+    /* Plum = yours (owned, your copy); green = done. #894D6B, #4F7A4A. */
+    --yours: 330 28% 42%;
+    --done: 114 25% 38%;
   }
 
   .dark {
@@ -60,6 +63,8 @@
     --chart-2: 330 35% 66%;
     --chart-3: 28 75% 60%;
     --chart-4: 140 22% 58%;
+    --yours: 328 40% 74%;
+    --done: 110 32% 70%;
   }
 }
 
@@ -92,6 +97,9 @@ html[data-theme="hardbop"] {
   --chart-2: 4 68% 48%;
   --chart-3: 42 88% 50%;
   --chart-4: 178 45% 32%;
+  /* Darker than the label blue, so they differ in more than hue. */
+  --yours: 328 36% 30%;
+  --done: 140 42% 27%;
   --font-display: var(--font-condensed);
 }
 /* Headings in capitals, slightly opened up — sleeve lettering, not body text. */
@@ -131,6 +139,9 @@ html[data-theme="hardbop"] .vinyl-record::after {
     input, textarea, select { font-size: 16px !important; }
   }
 }
+
+/* A section label: sentence case, 13px, semibold, muted — never capitals. */
+.section-label { font-size: 13px; line-height: 1.3; font-weight: 600; color: hsl(var(--muted-foreground)); }
 
 /* A row that scrolls sideways on a phone without showing a scrollbar. */
 .no-scrollbar { scrollbar-width: none; }

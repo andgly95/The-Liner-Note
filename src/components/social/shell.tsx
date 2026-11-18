@@ -1,28 +1,60 @@
 "use client";
 
 // The frame around every social page: a one-line header, and on a phone a
-// bottom bar — Home, Collection (the Discogs tools), You.
+// bottom bar — Home, Collection (the Discogs tools), You. Top-level pages get
+// the logo bar; inner pages (`inner`) get a back button instead, and can put
+// their own actions on the right with <HeaderActions>.
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Home, Library, User, Disc3 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { createContext, useContext, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Home, Library, User, Disc3, ChevronLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MeProvider, useMe } from "./me";
 import { SignInButtons } from "./sign-in";
 
-export function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
+export function Shell({ children, wide = false, inner = false }: { children: React.ReactNode; wide?: boolean; inner?: boolean }) {
   return (
     <MeProvider>
-      <Frame wide={wide}>{children}</Frame>
+      <Frame wide={wide} inner={inner}>{children}</Frame>
     </MeProvider>
   );
 }
 
-function Frame({ children, wide }: { children: React.ReactNode; wide: boolean }) {
+// Where an inner page's header actions render (filled through a portal, so
+// the page keeps its own state and the header stays in the Shell).
+const ActionsSlot = createContext<HTMLElement | null>(null);
+
+/** Buttons for the right of an inner page's header (share, more…). */
+export function HeaderActions({ children }: { children: React.ReactNode }) {
+  const slot = useContext(ActionsSlot);
+  return slot ? createPortal(children, slot) : null;
+}
+
+// Pages seen in this tab, so Back can tell "came from inside the app" (go
+// back) from "opened from a link" (there's nothing to go back to: go Home).
+let pagesSeen = 0;
+
+function BackButton() {
+  const router = useRouter();
+  return (
+    <button
+      onClick={() => (pagesSeen > 1 ? router.back() : router.push("/home"))}
+      aria-label="Back"
+      className="-ml-2 w-11 h-11 shrink-0 inline-flex items-center justify-center rounded-full hover:bg-accent"
+    >
+      <ChevronLeft className="w-6 h-6" />
+    </button>
+  );
+}
+
+function Frame({ children, wide, inner }: { children: React.ReactNode; wide: boolean; inner: boolean }) {
   const width = wide ? "max-w-6xl" : "max-w-3xl";
   const { me, loading } = useMe();
   const path = usePathname();
   const [signIn, setSignIn] = useState(false);
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { pagesSeen++; }, [path]);
   const nav = [
     { href: "/home", label: "Home", icon: Home, on: path === "/home" },
     { href: "/dashboard", label: "Collection", icon: Library, on: path?.startsWith("/dashboard") },
@@ -32,6 +64,13 @@ function Frame({ children, wide }: { children: React.ReactNode; wide: boolean })
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 pt-safe-top">
         <div className={`mx-auto ${width} px-4 h-14 flex items-center justify-between gap-3`}>
+          {inner ? (
+            <>
+              <BackButton />
+              <div ref={setSlot} className="-mr-2 flex items-center gap-1" />
+            </>
+          ) : (
+          <>
           <Link href="/home" className="flex items-center gap-2.5 min-w-0">
             <div className="vinyl-record w-7 h-7 shrink-0" />
             <span className="font-display text-lg font-semibold tracking-tight whitespace-nowrap">The Liner Note</span>
@@ -49,10 +88,14 @@ function Frame({ children, wide }: { children: React.ReactNode; wide: boolean })
               Sign in
             </button>
           )}
+          </>
+          )}
         </div>
       </header>
 
-      <main className={`mx-auto ${width} px-4 pt-4 pb-28 md:pb-12`}>{children}</main>
+      <ActionsSlot.Provider value={slot}>
+        <main className={`mx-auto ${width} px-4 pt-4 pb-28 md:pb-12`}>{children}</main>
+      </ActionsSlot.Provider>
 
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t bg-background/95 backdrop-blur pb-safe" aria-label="Sections">
         <div className="grid grid-cols-3">

@@ -72,7 +72,7 @@ const SECTIONS = [
   { value: "guides", label: "Guides", icon: BookOpen },
   // The analyses — read your collection back to you.
   { value: "roast", label: "Roast", icon: Flame, analysis: true },
-  { value: "gap_filler", label: "Gap Filler", icon: Search, analysis: true },
+  { value: "gap_filler", label: "Gap filler", icon: Search, analysis: true },
   { value: "oracle", label: "Oracle", icon: Sparkles, analysis: true },
   { value: "mood", label: "Mood", icon: Headphones, analysis: true },
   { value: "obscureness", label: "Obscure", icon: Telescope, analysis: true },

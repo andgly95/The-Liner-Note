@@ -835,10 +835,10 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
             return (
               <div key={key}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span className="section-label">
                     {label}
                     {key === "format" && filters.format.length > 1 && (
-                      <span className="normal-case tracking-normal font-normal"> · all of these</span>
+                      <span className="font-normal"> · all of these</span>
                     )}
                   </span>
                 </div>
