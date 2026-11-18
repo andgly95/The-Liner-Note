@@ -16,10 +16,10 @@ interface UserSwitcherProps {
 
 const FRIENDS_STORAGE_KEY = "liner-note-friends";
 
-export function UserSwitcher({ currentUser, viewingUser, onUserSelect }: UserSwitcherProps) {
+export function UserSwitcher({ currentUser, viewingUser, onUserSelect, defaultExpanded = false }: UserSwitcherProps & { defaultExpanded?: boolean }) {
   const [friends, setFriends] = useState<string[]>([]);
   const [newFriend, setNewFriend] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [error, setError] = useState<string | null>(null);
 
   // Load friends from localStorage on mount

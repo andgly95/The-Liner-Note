@@ -9,6 +9,8 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Search, Disc3, Star, Shuffle, X, ChevronDown, BarChart3 } from "lucide-react";
 import type { DiscogsCollectionItem } from "@/types/discogs";
+import { originalYear } from "@/lib/collection-years";
+import { DecadeChart } from "./decade-chart";
 
 interface CollectionBrowserProps {
   items?: DiscogsCollectionItem[];
@@ -41,7 +43,6 @@ const artistName = (it: DiscogsCollectionItem) =>
   it.basic_information.artists.map((a) => a.name.replace(/\s\(\d+\)$/, "").replace(/\*$/, "")).join(", ");
 const artistKey = (it: DiscogsCollectionItem) => artistName(it).toLowerCase().replace(/^the\s+/, "");
 const decadeLabel = (d: number) => `${d}s`;
-const shortDecade = (d: number) => `’${String(d).slice(2)}s`;
 
 export function CollectionBrowser({ items, totalItems, isReady, years, yearsPending = 0, actions, progress }: CollectionBrowserProps) {
   const [query, setQuery] = useState("");
@@ -55,11 +56,7 @@ export function CollectionBrowser({ items, totalItems, isReady, years, yearsPend
 
   /** When the music came out: the master's year, else the pressing's. */
   const yearOf = useMemo(() => {
-    return (it: DiscogsCollectionItem): number | null => {
-      const m = it.basic_information.master_id;
-      const y = (m && years?.[m]) || it.basic_information.year;
-      return y && y > 0 ? y : null;
-    };
+    return (it: DiscogsCollectionItem): number | null => originalYear(it, years);
   }, [years]);
   const decadeOf = useMemo(() => {
     return (it: DiscogsCollectionItem): number | null => {
@@ -132,7 +129,7 @@ export function CollectionBrowser({ items, totalItems, isReady, years, yearsPend
       {/* Toolbar — sticks under the section strip */}
       <div
         className="sticky z-10 -mx-4 px-4 pt-1 pb-3 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
-        style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px) + var(--section-strip, 57px))" }}
+        style={{ top: "calc(var(--app-header, 3.5rem) + env(safe-area-inset-top, 0px) + var(--section-strip, 57px))" }}
       >
         <label className="relative flex items-center">
           <Search className="absolute left-4 w-[18px] h-[18px] text-muted-foreground pointer-events-none" />
@@ -379,20 +376,13 @@ function StatsSheet({
     const top = Array.from(artists.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5);
     return {
       range: lo <= hi ? (lo === hi ? String(lo) : `${lo}–${hi}`) : null,
-      // Every decade from first to last, empty ones too: a gap is part of the shape.
-      decades: decades.size
-        ? Array.from({ length: (Math.max(...Array.from(decades.keys())) - Math.min(...Array.from(decades.keys()))) / 10 + 1 }, (_, i) => {
-            const d = Math.min(...Array.from(decades.keys())) + i * 10;
-            return [d, decades.get(d) ?? 0] as [number, number];
-          })
-        : [],
+      decades,
       // Only artists with more than one record say anything.
       artists: top.filter(([, n]) => n > 1),
       avg: rated ? sum / rated : null,
       rated,
     };
   }, [items, yearOf]);
-  const peak = Math.max(1, ...s.decades.map(([, n]) => n));
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center" onClick={onClose}>
@@ -419,22 +409,10 @@ function StatsSheet({
         </div>
 
         <div className="px-5 pb-6 space-y-6">
-          {s.decades.length > 0 && (
+          {s.decades.size > 0 && (
             <section>
               <h3 className="section-label mb-3">By decade</h3>
-              <div className="flex items-end gap-1.5 h-36">
-                {s.decades.map(([d, n]) => (
-                  <div key={d} className="flex-1 min-w-0 h-full flex flex-col items-center justify-end gap-1">
-                    {n > 0 && <span className="text-[11px] tabular-nums text-muted-foreground">{n}</span>}
-                    <div className={`w-full rounded-t ${n > 0 ? "bg-primary" : "bg-border h-px"}`} style={n > 0 ? { height: `${Math.max(3, (n / peak) * 100)}%` } : undefined} />
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-1.5 mt-1.5">
-                {s.decades.map(([d]) => (
-                  <span key={d} className="flex-1 min-w-0 text-center text-[11px] font-medium text-muted-foreground">{shortDecade(d)}</span>
-                ))}
-              </div>
+              <DecadeChart counts={s.decades} />
             </section>
           )}
 

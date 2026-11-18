@@ -13,10 +13,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MeProvider, useMe } from "./me";
 import { SignInButtons } from "./sign-in";
 
-export function Shell({ children, wide = false, inner = false }: { children: React.ReactNode; wide?: boolean; inner?: boolean }) {
+/**
+ * `inner`: a back button instead of the logo (album pages).
+ * `bare`: no app header on a phone — the page has its own title (Collection);
+ * desktop keeps it, since that's where the navigation lives there.
+ * Sticky things under the header offset by `var(--app-header)`.
+ */
+export function Shell({ children, wide = false, inner = false, bare = false }: { children: React.ReactNode; wide?: boolean; inner?: boolean; bare?: boolean }) {
   return (
     <MeProvider>
-      <Frame wide={wide} inner={inner}>{children}</Frame>
+      <Frame wide={wide} inner={inner} bare={bare}>{children}</Frame>
     </MeProvider>
   );
 }
@@ -48,7 +54,7 @@ function BackButton() {
   );
 }
 
-function Frame({ children, wide, inner }: { children: React.ReactNode; wide: boolean; inner: boolean }) {
+function Frame({ children, wide, inner, bare }: { children: React.ReactNode; wide: boolean; inner: boolean; bare: boolean }) {
   const width = wide ? "max-w-6xl" : "max-w-3xl";
   const { me, loading } = useMe();
   const path = usePathname();
@@ -61,8 +67,8 @@ function Frame({ children, wide, inner }: { children: React.ReactNode; wide: boo
     { href: me ? `/u/${me.handle}` : "#", label: "You", icon: User, on: !!me && path === `/u/${me.handle}` },
   ];
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 pt-safe-top">
+    <div className={`min-h-screen bg-background ${bare ? "[--app-header:0px] md:[--app-header:3.5rem]" : "[--app-header:3.5rem]"}`}>
+      <header className={`sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 pt-safe-top ${bare ? "hidden md:block" : ""}`}>
         <div className={`mx-auto ${width} px-4 h-14 flex items-center justify-between gap-3`}>
           {inner ? (
             <>

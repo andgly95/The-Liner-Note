@@ -180,6 +180,15 @@ collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]
   back after 10 min. Only the very first load waits: placeholders plus "2 of 4
   pages" from `/api/collection/progress` (fed by `getFullCollection`'s
   `onProgress`). A request sequence makes a newer collection (a friend's) win.
+- **Collection's frame** (step 6): `Shell bare` drops the logo bar on a phone
+  (desktop keeps it — its navigation lives there); sticky things offset by
+  `var(--app-header)` (0 on a phone there, 3.5rem otherwise). The page's own
+  header: title, "311 records · 14 wanted", "Synced …", and three icon buttons
+  (a friend's collection → the UserSwitcher in a sheet, share, sync). Sections
+  are a 4-way segmented control (Overview · Browse · Pressings · Shop) plus a
+  More sheet for the other tools. Overview = Recently added + `WhatItIs`
+  (`collection-overview.tsx`: top 5 genres with counts, `DecadeChart` by
+  original year, a format sentence that skips Discogs' "All Media").
 - **Browse** (`collection-browser.tsx`) is records first: sticky search and
   chips (Genre, Decade, order, Surprise me) under the section strip (its
   height is published as `--section-strip`), one summary line, a 3-column

@@ -20,6 +20,9 @@ import {
   ListMusic,
   BookOpen,
   ScanLine,
+  Users,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 import { RoastDisplay } from "@/components/features/roast-display";
 import { GapFillerDisplay } from "@/components/features/gap-filler-display";
@@ -32,7 +35,7 @@ import { MixtapeDisplay } from "@/components/features/mixtape-display";
 import { GuideDisplay } from "@/components/features/guide-display";
 import { PressingFinder } from "@/components/features/pressing-finder";
 import { UserSwitcher } from "@/components/features/user-switcher";
-import { CollectionStats } from "@/components/features/collection-stats";
+import { WhatItIs } from "@/components/features/collection-overview";
 import { ShareCollectionButton } from "@/components/social/share-collection";
 import type { CompressedCollection, DiscogsCollectionItem } from "@/types/discogs";
 import type { GapFillerResult } from "@/types/analysis";
@@ -94,6 +97,9 @@ const SECTIONS = [
   { value: "obscureness", label: "Obscure", icon: Telescope, analysis: true },
 ] as const;
 const VALID_TABS = new Set<string>(SECTIONS.map((x) => x.value));
+// The segmented control: the four that matter, in this order. The rest of the
+// tools are one tap away under More.
+const MAIN_SECTIONS = ["overview", "browse", "pressings", "shop"] as const;
 
 export default function Dashboard() {
   const router = useRouter();
@@ -107,6 +113,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [viewingUser, setViewingUser] = useState<string | null>(null);
   const [needsDiscogs, setNeedsDiscogs] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   // Restore last-used tab from localStorage so refresh doesn't drop the user back to Roast.
   useEffect(() => {
@@ -359,111 +367,122 @@ export default function Dashboard() {
     : undefined;
   const collectionString = collection?.collectionString || "";
 
+  const active = SECTIONS.find((x) => x.value === activeTab);
+  const inMore = !(MAIN_SECTIONS as readonly string[]).includes(activeTab);
+  const counts = [
+    collection ? `${collection.totalItems.toLocaleString()} record${collection.totalItems === 1 ? "" : "s"}` : null,
+    wantlist ? `${wantlist.totalItems.toLocaleString()} wanted` : null,
+  ].filter(Boolean).join(" · ");
+
   return (
-    <Shell wide>
-      {/* Sections — sticky under the header, swiped sideways on a phone */}
+    <Shell wide bare>
+      {/* Collection's own header: title, counts, and its three actions */}
+      <header className="flex items-start justify-between gap-3 pt-2 pb-3" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}>
+        <div className="min-w-0">
+          <h1 className="font-display text-3xl font-semibold leading-tight truncate">
+            {viewingUser ? `${viewingUser}'s collection` : "Collection"}
+          </h1>
+          <p className="text-sm text-muted-foreground truncate">
+            {counts || (fetchingCollection ? "Loading…" : "\u00a0")}
+          </p>
+          {!viewingUser && collection && (
+            <p className="text-xs text-muted-foreground">
+              {syncing ? "Syncing with Discogs…" : collection.syncedAt ? `Synced ${syncedAgo(collection.syncedAt)}` : null}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0 pt-1">
+          <Button variant="outline" size="icon" className="rounded-full w-11 h-11" onClick={() => setFriendsOpen(true)} aria-label="A friend's collection" title="A friend's collection">
+            <Users className="w-[18px] h-[18px]" />
+          </Button>
+          {!viewingUser && <ShareCollectionButton label="Send a friend this collection" iconOnly className="rounded-full w-11 h-11" />}
+          <Button variant="outline" size="icon" className="rounded-full w-11 h-11" onClick={refreshAll} disabled={busy} aria-label="Sync with Discogs" title="Sync with Discogs">
+            <RefreshCw className={`w-[18px] h-[18px] ${busy || syncing ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+      </header>
+
+      {/* Sections — a segmented control that fits the width, sticky */}
       <div
         ref={stripWrapRef}
-        style={{ top: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
-        className="sticky z-20 -mx-4 -mt-4 mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 border-b">
-        <div
-          ref={stripRef}
-          role="tablist"
-          aria-label="Collection"
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-4 scroll-px-4 py-2.5"
-        >
-          {SECTIONS.map((sec, i) => {
-            const on = activeTab === sec.value;
-            const Icon = sec.icon;
-            const firstAnalysis = "analysis" in sec && !("analysis" in SECTIONS[i - 1]);
-            return (
-              <div key={sec.value} className="flex items-center gap-1.5 shrink-0">
-                {firstAnalysis && <span className="w-px h-5 bg-border mx-1" aria-hidden />}
+        style={{ top: "calc(var(--app-header, 3.5rem) + env(safe-area-inset-top, 0px))" }}
+        className="sticky z-20 -mx-4 px-4 py-2 mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85"
+      >
+        <div className="flex items-center gap-2">
+          <div ref={stripRef} role="tablist" aria-label="Collection" className="flex-1 min-w-0 grid grid-cols-4 rounded-full bg-secondary p-1">
+            {MAIN_SECTIONS.map((v) => {
+              const sec = SECTIONS.find((x) => x.value === v)!;
+              const on = activeTab === v;
+              return (
                 <button
+                  key={v}
                   role="tab"
                   aria-selected={on}
-                  onClick={() => handleTabChange(sec.value)}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap transition-colors ${
-                    on ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-accent"
-                  }`}
+                  onClick={() => handleTabChange(v)}
+                  className={`h-9 rounded-full text-sm font-medium truncate px-1 transition-colors ${on ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
                 >
-                  <Icon className="w-4 h-4" />
                   {sec.label}
                 </button>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          <button
+            onClick={() => setMoreOpen(true)}
+            aria-label="More tools"
+            className={`h-11 shrink-0 rounded-full inline-flex items-center justify-center gap-1.5 text-sm font-medium ${
+              inMore ? "bg-foreground text-background px-3.5" : "w-11 bg-secondary text-muted-foreground"
+            }`}
+          >
+            {inMore && active ? <>{<active.icon className="w-4 h-4" />}{active.label}</> : <MoreHorizontal className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
       {/* Whose collection — said once wherever you are, not a card on every page */}
-      {viewingUser && activeTab !== "overview" && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm">
+      {viewingUser && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg bg-secondary px-3 py-2 text-sm">
           <span className="min-w-0 truncate">Viewing <span className="font-medium">{viewingUser}</span>&apos;s collection</span>
-          <button className="shrink-0 text-primary font-medium" onClick={() => handleUserSelect(null)}>Back to yours</button>
+          <button className="shrink-0 h-9 text-primary font-medium" onClick={() => handleUserSelect(null)}>Back to yours</button>
         </div>
       )}
 
+      {/* Only the analyses read a sample; say so there, not on Overview. */}
+      {active && "analysis" in active && collection?.optimized.truncated && collection.optimized.truncatedAt && (
+        <p className="mb-4 text-sm text-muted-foreground">
+          Your collection is large, so this reads the top {collection.optimized.truncatedAt.toLocaleString()} of{" "}
+          {collection.totalItems.toLocaleString()} records (recently added, highly rated, vinyl first).
+        </p>
+      )}
+
       {activeTab === "overview" && (
-        <div>
-          <div className="mb-4">
-            <UserSwitcher currentUser={user.username} viewingUser={viewingUser} onUserSelect={handleUserSelect} />
-          </div>
-
-          <div className="flex items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 mb-4">
-            <div className="flex items-baseline gap-x-4 gap-y-1 flex-wrap min-w-0">
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-2xl font-semibold tabular-nums">
-                  {fetchingCollection ? <Loader2 className="w-5 h-5 animate-spin inline" /> : collection?.totalItems?.toLocaleString() ?? "—"}
-                </span>
-                <span className="text-sm text-muted-foreground">records</span>
+        <div className="space-y-8 pb-4">
+          {!collection && fetchingCollection ? (
+            <div aria-busy="true" className="space-y-4">
+              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full bg-primary rounded-full transition-[width] duration-700 ${loadProgress ? "" : "w-1/4 animate-pulse"}`}
+                  style={loadProgress ? { width: `${Math.max(6, (loadProgress.current / Math.max(1, loadProgress.total)) * 100)}%` } : undefined}
+                />
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-2xl font-semibold tabular-nums">
-                  {fetchingWantlist ? <Loader2 className="w-5 h-5 animate-spin inline" /> : wantlist?.totalItems?.toLocaleString() ?? "—"}
-                </span>
-                <span className="text-sm text-muted-foreground">wanted</span>
-              </div>
-              <div className="basis-full text-xs text-muted-foreground flex items-center gap-1.5">
-                <Disc3 className="w-3.5 h-3.5" />
-                {!collection
-                  ? fetchingCollection ? "Loading collection…" : "Collection not loaded"
-                  : syncing
-                    ? "Syncing with Discogs…"
-                    : collection.syncedAt
-                      ? `Synced ${syncedAgo(collection.syncedAt)}`
-                      : "Collection loaded"}
+              <p className="text-sm text-muted-foreground">
+                {loadProgress
+                  ? `Loading ${loadProgress.total.toLocaleString()} records · ${Math.min(Math.ceil(loadProgress.total / 100), Math.max(1, Math.ceil(loadProgress.current / 100)))} of ${Math.ceil(loadProgress.total / 100)} pages`
+                  : "Loading your records from Discogs…"}
+              </p>
+              <div className="flex gap-3 overflow-hidden">
+                {Array.from({ length: 4 }, (_, i) => <div key={i} className="w-28 sm:w-32 shrink-0 aspect-square rounded-md bg-muted animate-pulse" />)}
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {/* A link for a friend to browse your records — yours only, not one you're viewing */}
-              {!viewingUser && <ShareCollectionButton label="Share" />}
-              <Button variant="outline" size="icon" onClick={refreshAll} disabled={busy} aria-label="Refresh collection and wantlist">
-                <RefreshCw className={`w-4 h-4 ${busy || syncing ? "animate-spin" : ""}`} />
-              </Button>
-            </div>
-          </div>
-
-          {/* Truncation warning — surfaces silent dropping for collections > LLM budget */}
-          {collection?.optimized.truncated && collection.optimized.truncatedAt && (
-            <div className="mb-4 px-4 py-3 rounded-md border border-amber-500/40 bg-amber-500/10 text-sm text-amber-800 dark:text-amber-300 flex items-start gap-2">
-              <Disc3 className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>
-                Your collection is large ({collection.totalItems.toLocaleString()} items). Analyses run on
-                the top {collection.optimized.truncatedAt.toLocaleString()} prioritized records (recently
-                added + highly rated + vinyl).
-              </span>
-            </div>
-          )}
+          ) : null}
 
           {recent.length > 0 && (
-            <section className="mb-4" aria-label="Recently added">
-              <div className="flex items-baseline justify-between mb-2">
-                <h2 className="font-display text-lg font-semibold">
+            <section aria-label="Recently added">
+              <div className="flex items-baseline justify-between mb-3">
+                <h2 className="font-display text-xl font-semibold">
                   {viewingUser ? `${viewingUser}'s latest` : "Recently added"}
                 </h2>
                 {collection && collection.totalItems > recent.length && (
-                  <button className="text-sm text-primary font-medium" onClick={() => handleTabChange("browse")}>
+                  <button className="h-9 text-sm text-primary font-medium" onClick={() => handleTabChange("browse")}>
                     Browse all
                   </button>
                 )}
@@ -471,7 +490,7 @@ export default function Dashboard() {
               <div className="-mx-4 px-4 scroll-px-4 flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1">
                 {recent.map((item) => {
                   const basic = item.basic_information;
-                  const artist = basic.artists.map((a) => a.name).join(", ");
+                  const artist = basic.artists.map((a) => a.name.replace(/\s\(\d+\)$/, "").replace(/\*$/, "")).join(", ");
                   const thumb = basic.cover_image || basic.thumb;
                   return (
                     <div key={item.instance_id} className="w-28 sm:w-32 shrink-0 snap-start">
@@ -484,9 +503,9 @@ export default function Dashboard() {
                           </div>
                         )}
                       </div>
-                      <div className="mt-1.5 text-xs leading-tight">
-                        <div className="font-medium truncate" title={artist}>{artist}</div>
-                        <div className="text-muted-foreground truncate" title={basic.title}>{basic.title}</div>
+                      <div className="mt-1.5 text-xs leading-snug">
+                        <div className="font-semibold truncate" title={basic.title}>{basic.title}</div>
+                        <div className="text-muted-foreground truncate" title={artist}>{artist}</div>
                       </div>
                     </div>
                   );
@@ -495,11 +514,7 @@ export default function Dashboard() {
             </section>
           )}
 
-          {collection && (
-            <section className="mb-6" aria-label="Collection breakdown">
-              <CollectionStats collection={collection.optimized} />
-            </section>
-          )}
+          {collection?.raw && <WhatItIs items={collection.raw} years={collection.years} />}
         </div>
       )}
 
@@ -512,7 +527,6 @@ export default function Dashboard() {
           years={collection?.years}
           yearsPending={collection?.yearsPending ?? 0}
           progress={loadProgress}
-          actions={!viewingUser ? <ShareCollectionButton label="Send a friend this collection" iconOnly className="rounded-full w-10 h-10" /> : null}
         />
       )}
       {activeTab === "shop" && (
@@ -544,6 +558,61 @@ export default function Dashboard() {
       {activeTab === "obscureness" && (
         <ObscurenessDisplay collectionString={collectionString} username={collection?.username} isReady={!!collection} />
       )}
+      {friendsOpen && (
+        <Sheet title="A friend's collection" onClose={() => setFriendsOpen(false)}>
+          <UserSwitcher
+            currentUser={user.username}
+            viewingUser={viewingUser}
+            defaultExpanded
+            onUserSelect={(u) => { setFriendsOpen(false); handleUserSelect(u); }}
+          />
+        </Sheet>
+      )}
+      {moreOpen && (
+        <Sheet title="More tools" onClose={() => setMoreOpen(false)}>
+          <ul className="divide-y border-y">
+            {SECTIONS.filter((x) => !(MAIN_SECTIONS as readonly string[]).includes(x.value)).map((sec) => (
+              <li key={sec.value}>
+                <button
+                  onClick={() => { setMoreOpen(false); handleTabChange(sec.value); }}
+                  className={`w-full h-12 flex items-center gap-3 px-1 text-left ${activeTab === sec.value ? "text-primary font-medium" : ""}`}
+                >
+                  <sec.icon className="w-5 h-5 text-muted-foreground" />
+                  {sec.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Sheet>
+      )}
     </Shell>
+  );
+}
+
+/** A bottom sheet on a phone, a centred dialog on a wider screen. */
+function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-label={title}
+        className="w-full sm:max-w-md max-h-[85vh] overflow-y-auto bg-card rounded-t-2xl sm:rounded-2xl shadow-xl px-5 pt-3 pb-6 pb-safe"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto w-10 h-1 rounded-full bg-border sm:hidden" />
+        <div className="mt-2 mb-3 flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} aria-label="Close" className="-mr-2 w-11 h-11 inline-flex items-center justify-center rounded-full hover:bg-accent">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
   );
 }
