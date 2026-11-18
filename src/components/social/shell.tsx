@@ -68,7 +68,11 @@ function Frame({ children, wide, inner, bare }: { children: React.ReactNode; wid
   ];
   return (
     <div className={`min-h-screen bg-background ${bare ? "[--app-header:0px] md:[--app-header:3.5rem]" : "[--app-header:3.5rem]"}`}>
-      <header className={`sticky top-0 z-30 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 pt-safe-top ${bare ? "hidden md:block" : ""}`}>
+      <header
+        className={`sticky top-0 z-30 backdrop-blur pt-safe-top ${inner ? "" : "border-b bg-background/90 supports-[backdrop-filter]:bg-background/75"} ${bare ? "hidden md:block" : ""}`}
+        // An inner page can tint its header to run into its own top band.
+        style={inner ? { background: "var(--inner-header-bg, hsl(var(--background) / 0.9))" } : undefined}
+      >
         <div className={`mx-auto ${width} px-4 h-14 flex items-center justify-between gap-3`}>
           {inner ? (
             <>

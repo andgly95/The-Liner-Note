@@ -22,8 +22,31 @@ export function setListened(user: User, mbid: string, listened: boolean) {
       db.prepare("DELETE FROM listens WHERE user_id = ? AND album_mbid = ?").run(user.id, mbid);
       db.prepare("DELETE FROM ratings WHERE user_id = ? AND album_mbid = ?").run(user.id, mbid);
       db.prepare("DELETE FROM rankings WHERE user_id = ? AND album_mbid = ?").run(user.id, mbid);
+      db.prepare("DELETE FROM notes WHERE user_id = ? AND album_mbid = ?").run(user.id, mbid);
     })();
   }
+}
+
+export const NOTE_MAX = 2000;
+
+/** Your liner note on an album. Writing one logs a listen (you've heard it);
+ *  an empty note deletes it. */
+export function setNote(user: User, mbid: string, body: string) {
+  const db = getDb();
+  const text = body.replace(/\r\n/g, "\n").trim();
+  if (text.length > NOTE_MAX) throw new RangeError(`Keep it under ${NOTE_MAX.toLocaleString()} characters`);
+  if (!text) {
+    db.prepare("DELETE FROM notes WHERE user_id = ? AND album_mbid = ?").run(user.id, mbid);
+    return null;
+  }
+  db.transaction(() => {
+    db.prepare("INSERT OR IGNORE INTO listens (user_id, album_mbid, created_at) VALUES (?, ?, ?)").run(user.id, mbid, now());
+    db.prepare(
+      `INSERT INTO notes (user_id, album_mbid, body, updated_at) VALUES (?, ?, ?, ?)
+       ON CONFLICT(user_id, album_mbid) DO UPDATE SET body = excluded.body, updated_at = excluded.updated_at`
+    ).run(user.id, mbid, text, now());
+  })();
+  return text;
 }
 
 export function setRating(user: User, mbid: string, scaleId: string, raw: string | null) {
@@ -115,13 +138,18 @@ export async function albumView(mbid: string, viewer: User | null) {
 
   let mine = null;
   if (viewer) {
-    const listened = !!db.prepare("SELECT 1 FROM listens WHERE user_id = ? AND album_mbid = ?").get(viewer.id, mbid);
+    const listen = db.prepare("SELECT created_at FROM listens WHERE user_id = ? AND album_mbid = ?").get(viewer.id, mbid) as
+      | { created_at: number } | undefined;
+    const note = db.prepare("SELECT body FROM notes WHERE user_id = ? AND album_mbid = ?").get(viewer.id, mbid) as
+      | { body: string } | undefined;
     const rating = db.prepare("SELECT score, scale, raw FROM ratings WHERE user_id = ? AND album_mbid = ?").get(viewer.id, mbid) as
       | { score: number; scale: string; raw: string } | undefined;
     const ranking = db.prepare("SELECT mode, track_order, payload FROM rankings WHERE user_id = ? AND album_mbid = ?").get(viewer.id, mbid) as
       | { mode: string; track_order: string; payload: string | null } | undefined;
     mine = {
-      listened,
+      listened: !!listen,
+      listenedAt: listen?.created_at ?? null,
+      note: note?.body ?? null,
       rating: rating ?? null,
       ranking: ranking ? { mode: ranking.mode, order: JSON.parse(ranking.track_order) as string[], payload: ranking.payload ? JSON.parse(ranking.payload) : null } : null,
     };

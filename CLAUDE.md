@@ -159,6 +159,21 @@ collector tools. Pages: `/home`, `/album/[mbid]`, `/artist/[mbid]`, `/u/[handle]
   under "App" on your profile.
 
 
+## The album page (redesign step 2)
+
+- Order: a band tinted with the cover's average colour (canvas over the CAA
+  image; the inner header takes the same tint via `--inner-header-bg`), then
+  the listen card — "Log a listen" / green "Listened today" (`--done`), 34px
+  stars, and the liner note — then Tracks ("11 tracks · 28 min", "Rank them"
+  outlined; the order switch only appears when there's a ranking to switch to).
+- **Liner notes**: `notes` (migration 7), plain text ≤ 2,000 chars, private to
+  the writer for now. `PUT /api/albums/[mbid]/note {body}`; writing one logs a
+  listen, empty deletes. Un-listening deletes it with the rating and ranking,
+  after a confirm that names what goes.
+- The rating scale is a setting on the You tab (`scale-setting.tsx`); only
+  stars are free, and ratings keep the scale they were given on.
+
+
 ## Browse and the per-person collection copy
 
 - **`collection_copies`** (migration 6, `src/lib/collection-copy.ts`): every

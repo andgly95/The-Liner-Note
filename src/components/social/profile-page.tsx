@@ -10,6 +10,7 @@ import { AlbumTile, StarsDisplay } from "./bits";
 import { RankedBadge } from "./home-page";
 import { useMe } from "./me";
 import { ThemePicker } from "./theme-picker";
+import { ScaleSetting } from "./scale-setting";
 import { InstallAction } from "./install-app";
 import { ShelfSettings } from "./shelf-settings";
 import { clearPersonalCache } from "@/lib/pwa";
@@ -86,6 +87,13 @@ export function ProfilePage({ handle }: { handle: string }) {
         <section className="space-y-2">
           <h2 className="section-label">Theme</h2>
           <ThemePicker />
+        </section>
+      )}
+
+      {isMe && (
+        <section className="space-y-2">
+          <h2 className="section-label">Rating scale</h2>
+          <ScaleSetting />
         </section>
       )}
 

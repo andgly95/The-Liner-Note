@@ -59,13 +59,13 @@ export function StarsDisplay({ value, className = "w-3.5 h-3.5" }: { value: numb
  * The free rating: five stars, each split into a left and right half so a tap
  * on the left of the fourth star is 3.5. Tapping your current rating clears it.
  */
-export function StarsInput({ value, onChange, disabled }: { value: number | null; onChange: (v: number | null) => void; disabled?: boolean }) {
+export function StarsInput({ value, onChange, disabled, size = "w-9 h-9 sm:w-8 sm:h-8", className = "" }: { value: number | null; onChange: (v: number | null) => void; disabled?: boolean; size?: string; className?: string }) {
   const [hover, setHover] = useState<number | null>(null);
   const shown = hover ?? value ?? 0;
   return (
-    <div className="inline-flex items-center" onPointerLeave={() => setHover(null)} role="radiogroup" aria-label="Your rating">
+    <div className={`inline-flex items-center ${className}`} onPointerLeave={() => setHover(null)} role="radiogroup" aria-label="Your rating">
       {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className="relative w-9 h-9 sm:w-8 sm:h-8 text-primary">
+        <span key={i} className={`relative ${size} text-primary`}>
           {shown >= i ? (
             <Star className="w-full h-full fill-current" />
           ) : shown >= i - 0.5 ? (

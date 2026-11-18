@@ -167,6 +167,17 @@ const MIGRATIONS: string[] = [
     synced_at        INTEGER NOT NULL
   );
   `,
+  // 7 — the liner note: one plain-text note per album per person, kept with
+  // their listen and rating. Private to its writer for now.
+  `
+  CREATE TABLE notes (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    album_mbid TEXT NOT NULL REFERENCES albums(mbid),
+    body       TEXT NOT NULL,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (user_id, album_mbid)
+  );
+  `,
 ];
 
 let db: Database.Database | null = null;

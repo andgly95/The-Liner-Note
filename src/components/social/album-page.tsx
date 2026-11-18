@@ -1,13 +1,14 @@
 "use client";
 
 // One album: what it is, what you thought of it, and what everyone thinks.
+// Logging and rating come first, then your liner note (design/redesign 03/04).
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
-import { Headphones, Check, Lock, ListOrdered, Users, Loader2, Pencil, Share } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Headphones, Check, Lock, ListOrdered, Users, Loader2, Pencil, Share, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Cover, StarsDisplay, StarsInput } from "./bits";
+import { Cover, StarsDisplay, StarsInput, coverUrl } from "./bits";
 import { RankEditor, fmtLength } from "./rank-editor";
 import { useMe } from "./me";
 import { HeaderActions, useSignInPrompt } from "./shell";
@@ -18,7 +19,13 @@ interface View {
   album: { mbid: string; title: string; artist: string; artist_mbid: string | null; year: number | null; type: string | null; secondary: string | null; tracks: Track[] };
   stats: { listeners: number; ratings: number; avgScore: number | null };
   community: { voters: number; tracks: { key: string; avgPosition: number; topPicks: number }[] };
-  mine: { listened: boolean; rating: { score: number; scale: string; raw: string } | null; ranking: { mode: string; order: string[] } | null } | null;
+  mine: {
+    listened: boolean;
+    listenedAt: number | null;
+    note: string | null;
+    rating: { score: number; scale: string; raw: string } | null;
+    ranking: { mode: string; order: string[] } | null;
+  } | null;
   recent: { handle: string; name: string; avatar_url: string | null; raw: string | null; scale: string | null; ranked: number }[];
 }
 type Tab = "album" | "mine" | "community";
@@ -32,6 +39,7 @@ export function AlbumPage({ mbid }: { mbid: string }) {
   const [tab, setTab] = useState<Tab>("album");
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const band = useCoverTint(mbid);
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/albums/${mbid}`, { cache: "no-store" });
@@ -74,9 +82,23 @@ export function AlbumPage({ mbid }: { mbid: string }) {
   }
 
   const { album, stats, community, mine } = view;
+
+  const unlisten = () => {
+    const loses = [mine?.rating && "your rating", mine?.ranking && "your ranking", mine?.note && "your liner note"].filter(Boolean);
+    const msg = loses.length
+      ? `Remove your listen? ${loses.join(", ").replace(/, ([^,]*)$/, " and $1")} go${loses.length === 1 ? "es" : ""} with it.`
+      : "Remove your listen?";
+    if (confirm(msg.charAt(0).toUpperCase() + msg.slice(1))) send("listen", "POST", { listened: false });
+  };
   const byKey = new Map(album.tracks.map((t) => [t.key, t]));
   const myStars = mine?.rating?.scale === "stars5" ? Number(mine.rating.raw) : mine?.rating ? Math.round(mine.rating.score / 10) / 2 : null;
   const multiDisc = new Set(album.tracks.map((t) => t.disc)).size > 1;
+  const totalMs = album.tracks.reduce((n, t) => n + (t.length_ms ?? 0), 0);
+  const orders = ([
+    ["album", "Album order", true],
+    ["mine", "Your ranking", !!mine?.ranking],
+    ["community", `Everyone${community.voters ? ` · ${community.voters}` : ""}`, community.voters > 0],
+  ] as [Tab, string, boolean][]).filter(([, , show]) => show);
 
   const orderFor = (t: Tab): Track[] =>
     t === "mine" && mine?.ranking
@@ -109,80 +131,83 @@ export function AlbumPage({ mbid }: { mbid: string }) {
         </button>
       </HeaderActions>
 
-      {/* The album */}
-      <section className="flex gap-4 items-end">
-        <Cover mbid={album.mbid} size={500} className="w-32 sm:w-44 shrink-0 shadow-md" alt={`${album.title} cover`} />
-        <div className="min-w-0 pb-1">
-          <div className="section-label">{[[album.type, album.secondary].filter(Boolean).join(", ") || "Album", album.year].filter(Boolean).join(" · ")}</div>
-          <h1 className="font-display text-2xl sm:text-3xl font-semibold leading-tight">{album.title}</h1>
-          <div className="mt-1 text-sm">
-            {album.artist_mbid ? (
-              <Link href={`/artist/${album.artist_mbid}`} className="font-medium hover:underline">{album.artist}</Link>
-            ) : (
-              <span className="font-medium">{album.artist}</span>
-            )}
-          </div>
-          {/* Only what there is: no "No ratings yet", no "0 listeners". */}
-          {(stats.avgScore !== null || stats.listeners > 0) && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-              {stats.avgScore !== null && (
-                <>
-                  <StarsDisplay value={Math.round(stats.avgScore / 10) / 2} />
-                  <span className="tabular-nums">{(stats.avgScore / 20).toFixed(1)}</span>
-                  <span>· {stats.ratings} {stats.ratings === 1 ? "rating" : "ratings"}</span>
-                </>
-              )}
-              {stats.listeners > 0 && (
-                <span>{stats.avgScore !== null && "· "}{stats.listeners} {stats.listeners === 1 ? "listener" : "listeners"}</span>
-              )}
-            </div>
+      {/* The album: a band tinted with the cover, running up under the header */}
+      <section
+        className="-mx-4 -mt-4 px-4 pt-2 pb-6 flex flex-col items-center text-center transition-colors duration-500"
+        style={{ background: band ?? "hsl(var(--secondary))" }}
+      >
+        <Cover mbid={album.mbid} size={500} className="w-[210px] shadow-xl" alt={`${album.title} cover`} />
+        <div className="mt-4 section-label">{[[album.type, album.secondary].filter(Boolean).join(", ") || "Album", album.year].filter(Boolean).join(" · ")}</div>
+        <h1 className="mt-1 font-display text-3xl font-semibold leading-tight text-balance">{album.title}</h1>
+        <div className="mt-1 text-base">
+          {album.artist_mbid ? (
+            <Link href={`/artist/${album.artist_mbid}`} className="font-medium hover:underline">{album.artist}</Link>
+          ) : (
+            <span className="font-medium">{album.artist}</span>
           )}
         </div>
+        {/* Only what there is: no "No ratings yet", no "0 listeners". */}
+        {(stats.avgScore !== null || stats.listeners > 0) && (
+          <div className="mt-2 flex items-center justify-center gap-2 text-sm text-muted-foreground flex-wrap">
+            {stats.avgScore !== null && (
+              <>
+                <StarsDisplay value={Math.round(stats.avgScore / 10) / 2} />
+                <span className="tabular-nums">{(stats.avgScore / 20).toFixed(1)}</span>
+                <span>· {stats.ratings} {stats.ratings === 1 ? "rating" : "ratings"}</span>
+              </>
+            )}
+            {stats.listeners > 0 && (
+              <span>{stats.avgScore !== null && "· "}{stats.listeners} {stats.listeners === 1 ? "listener" : "listeners"}</span>
+            )}
+          </div>
+        )}
       </section>
 
-      {/* You */}
-      <section className="rounded-xl border bg-card p-4 space-y-3">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <Button
-            variant={mine?.listened ? "default" : "outline"}
-            className="rounded-full"
-            disabled={busy}
-            onClick={() => send("listen", "POST", { listened: !mine?.listened })}
-          >
-            {mine?.listened ? <Check className="w-4 h-4 mr-1.5" /> : <Headphones className="w-4 h-4 mr-1.5" />}
-            {mine?.listened ? "Listened" : "I've listened to this"}
-          </Button>
-          <div className="flex items-center gap-2">
-            <StarsInput
-              value={myStars}
-              disabled={busy}
-              onChange={(v) => send("rating", "PUT", { scale: "stars5", raw: v === null ? null : String(v) })}
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 flex-wrap text-xs text-muted-foreground">
-          <span>Rate on:</span>
-          <span className="rounded-full bg-primary/10 text-primary px-2 py-0.5 font-medium">★ stars</span>
-          {["1–10", "0–100", "Letter"].map((s) => (
+      {/* You: log, rate, write — the first thing on the page */}
+      <section className="rounded-2xl border bg-card p-4 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          {mine?.listened ? (
             <button
-              key={s}
-              onClick={() => toast({ title: "Premium", description: `The ${s} scale is coming with Liner Note Premium.` })}
-              className="rounded-full border px-2 py-0.5 inline-flex items-center gap-1"
+              disabled={busy}
+              onClick={unlisten}
+              className="h-11 px-5 rounded-full bg-done text-white font-medium inline-flex items-center gap-2 disabled:opacity-60"
+              title="Tap to remove your listen"
             >
-              <Lock className="w-3 h-3" /> {s}
+              <Check className="w-4 h-4" /> {listenedLabel(mine.listenedAt)}
             </button>
-          ))}
+          ) : (
+            <Button className="h-11 px-5 rounded-full" disabled={busy} onClick={() => send("listen", "POST", { listened: true })}>
+              <Headphones className="w-4 h-4 mr-2" /> Log a listen
+            </Button>
+          )}
+          <span className="text-sm text-muted-foreground">{myStars ? `${myStars} out of 5` : "Tap to rate"}</span>
         </div>
+        <StarsInput
+          value={myStars}
+          disabled={busy}
+          size="w-[34px] h-[34px]"
+          className="w-full justify-between px-1"
+          onChange={(v) => send("rating", "PUT", { scale: "stars5", raw: v === null ? null : String(v) })}
+        />
+        <LinerNote note={mine?.note ?? null} busy={busy} onSave={(body) => send("note", "PUT", { body })} signedIn={!!me} onSignIn={prompt.open} />
       </section>
 
       {/* Tracks */}
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-display text-xl font-semibold">Tracks</h2>
+          <div>
+            <h2 className="font-display text-2xl font-semibold leading-tight">Tracks</h2>
+            {album.tracks.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {album.tracks.length} {album.tracks.length === 1 ? "track" : "tracks"}
+                {totalMs > 0 && ` · ${Math.round(totalMs / 60000)} min`}
+              </p>
+            )}
+          </div>
           {!editing && album.tracks.length > 1 && (
-            <Button size="sm" className="rounded-full" onClick={() => (me ? setEditing(true) : prompt.open())}>
+            <Button variant="outline" className="h-11 rounded-full" onClick={() => (me ? setEditing(true) : prompt.open())}>
               {mine?.ranking ? <Pencil className="w-3.5 h-3.5 mr-1.5" /> : <ListOrdered className="w-4 h-4 mr-1.5" />}
-              {mine?.ranking ? "Edit ranking" : "Rank tracks"}
+              {mine?.ranking ? "Edit ranking" : "Rank them"}
             </Button>
           )}
         </div>
@@ -219,21 +244,22 @@ export function AlbumPage({ mbid }: { mbid: string }) {
           </>
         ) : (
           <>
-            <div className="flex gap-1.5">
-              {([
-                ["album", "Album order", true],
-                ["mine", "Your ranking", !!mine?.ranking],
-                ["community", `Everyone${community.voters ? ` · ${community.voters}` : ""}`, community.voters > 0],
-              ] as [Tab, string, boolean][]).filter(([, , show]) => show).map(([id, label]) => (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className={`rounded-full px-3 py-1.5 text-sm ${tab === id ? "bg-foreground text-background font-medium" : "border text-muted-foreground"}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {/* A choice only once there's a ranking to switch to */}
+            {orders.length > 1 && (
+              <div role="tablist" aria-label="Order" className="grid rounded-full bg-secondary p-1" style={{ gridTemplateColumns: `repeat(${orders.length}, minmax(0, 1fr))` }}>
+                {orders.map(([id, label]) => (
+                  <button
+                    key={id}
+                    role="tab"
+                    aria-selected={tab === id}
+                    onClick={() => setTab(id)}
+                    className={`h-9 rounded-full text-sm font-medium truncate px-2 ${tab === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <ol className="divide-y border-y">
               {orderFor(tab).map((t, i) => {
                 const c = tab === "community" ? community.tracks[i] : null;
@@ -292,6 +318,124 @@ export function AlbumPage({ mbid }: { mbid: string }) {
         </section>
       )}
       {prompt.sheet}
+    </div>
+  );
+}
+
+/** "Listened today", "Listened yesterday", "Listened Nov 3". */
+function listenedLabel(at: number | null) {
+  if (!at) return "Listened";
+  const d = new Date(at);
+  const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(at).setHours(0, 0, 0, 0)) / 86_400_000);
+  if (days <= 0) return "Listened today";
+  if (days === 1) return "Listened yesterday";
+  return `Listened ${d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" })}`;
+}
+
+/** The cover's average colour, softened into the page — for the top band and
+ *  the header above it. Null until it's known (or when the cover can't be read). */
+function useCoverTint(mbid: string): string | null {
+  const [tint, setTint] = useState<string | null>(null);
+  useEffect(() => {
+    let gone = false;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = c.height = 12;
+        const g = c.getContext("2d", { willReadFrequently: true });
+        if (!g) return;
+        g.drawImage(img, 0, 0, 12, 12);
+        const px = g.getImageData(0, 0, 12, 12).data;
+        let r = 0, gr = 0, b = 0;
+        for (let i = 0; i < px.length; i += 4) { r += px[i]; gr += px[i + 1]; b += px[i + 2]; }
+        const n = px.length / 4;
+        if (!gone) setTint(`color-mix(in srgb, rgb(${Math.round(r / n)} ${Math.round(gr / n)} ${Math.round(b / n)}) 22%, hsl(var(--background)))`);
+      } catch {} // a cover without CORS: keep the plain band
+    };
+    img.src = coverUrl(mbid, 250);
+    return () => { gone = true; };
+  }, [mbid]);
+  // The header above runs into the band.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (tint) root.style.setProperty("--inner-header-bg", tint);
+    return () => { root.style.removeProperty("--inner-header-bg"); };
+  }, [tint]);
+  return tint;
+}
+
+/** Your liner note: a field that grows, then the note in the display face
+ *  with Edit. Private to you. */
+function LinerNote({
+  note, busy, onSave, signedIn, onSignIn,
+}: {
+  note: string | null;
+  busy: boolean;
+  onSave: (body: string) => Promise<boolean>;
+  signedIn: boolean;
+  onSignIn: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(note ?? "");
+  const box = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => { if (!editing) setDraft(note ?? ""); }, [note, editing]);
+  const grow = () => {
+    const el = box.current;
+    if (el) { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; }
+  };
+  useEffect(grow, [draft, editing]);
+
+  if (note && !editing) {
+    return (
+      <div className="border-t pt-4">
+        <div className="flex items-center justify-between gap-3 mb-1.5">
+          <h3 className="section-label">Your liner note</h3>
+          <button onClick={() => { setEditing(true); requestAnimationFrame(() => box.current?.focus()); }} className="h-9 -mr-1 px-2 text-sm font-medium text-primary">
+            Edit
+          </button>
+        </div>
+        <p className="font-display text-lg leading-relaxed whitespace-pre-line break-words">{note}</p>
+      </div>
+    );
+  }
+
+  const dirty = draft.trim() !== (note ?? "").trim();
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <PenLine className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <textarea
+          ref={box}
+          value={draft}
+          rows={2}
+          maxLength={2000}
+          onFocus={() => { if (!signedIn) { box.current?.blur(); onSignIn(); } else setEditing(true); }}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Write a liner note…"
+          className="w-full resize-none overflow-hidden rounded-xl bg-secondary pl-10 pr-3 py-3 text-base sm:text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[1.5px] focus-visible:ring-primary"
+        />
+      </div>
+      {editing && (
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">
+            Only you see it{draft.length > 1600 ? ` · ${2000 - draft.length} left` : ""}
+          </span>
+          <div className="flex gap-1.5">
+            <Button variant="ghost" className="h-10 rounded-full" onClick={() => { setDraft(note ?? ""); setEditing(false); }}>
+              Cancel
+            </Button>
+            <Button
+              className="h-10 rounded-full"
+              disabled={busy || !dirty}
+              onClick={async () => { if (await onSave(draft)) setEditing(false); }}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
