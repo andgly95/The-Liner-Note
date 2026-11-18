@@ -25,6 +25,38 @@ function block(p: PressingDetail): string {
   return lines.join("\n");
 }
 
+// A follow-up conversation: [guide, what I see, reply, what I see, …]. The
+// client keeps it; the server rebuilds the shortlist from the guide's ids
+// (cached) and checks the turns alternate, starting with the guide and ending
+// with the person.
+const MAX_TURNS = 41; // the guide + 20 exchanges
+interface Turn { role: "assistant" | "user"; content: string; standing?: unknown }
+
+function followUps(raw: unknown, ids: number[]): { role: "assistant" | "user"; content: string }[] | null {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw) || raw.length > MAX_TURNS) return null;
+  const known = new Set(ids);
+  const out: { role: "assistant" | "user"; content: string }[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const t = raw[i] as Turn;
+    const role = i % 2 === 0 ? "assistant" : "user";
+    if (!t || t.role !== role || typeof t.content !== "string") return null;
+    if (role === "assistant") {
+      out.push({ role, content: t.content.slice(0, 30000).trim() || "(no reply)" });
+    } else {
+      const standing = Array.isArray(t.standing) ? t.standing.map(Number).filter((n) => known.has(n)) : ids;
+      const said = t.content.slice(0, 1000).trim();
+      if (!said) return null;
+      out.push({
+        role,
+        content: `Still in the running (${standing.length}): ${standing.join(", ")}\n\nOn my copy / my question: ${said}`,
+      });
+    }
+  }
+  if (out.length && out[out.length - 1].role !== "user") return null;
+  return out;
+}
+
 export async function POST(req: Request) {
   const session = await sessionOrNull();
   if (!session) return unauthorized();
@@ -35,20 +67,25 @@ export async function POST(req: Request) {
   if (ids.length < 1) return Response.json({ error: "No pressings to compare" }, { status: 400 });
   const master = String(body.master || "").slice(0, 200);
   const filters = String(body.filters || "").slice(0, 300);
+  const history = followUps(body.history, ids);
+  if (!history) return Response.json({ error: "That conversation doesn't add up — start the guide again" }, { status: 400 });
 
   // Normally all cached already — the browser loaded them to show the list.
   const { details } = await pressingDetails(ids, session.tokens);
   if (!details.length) return Response.json({ error: "Could not load those pressings" }, { status: 502 });
 
+  // The shortlist is the same on every turn of a conversation: cache it.
+  const cache = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
   const result = streamText({
     model: anthropic(MODEL),
     messages: [
+      { role: "system", content: PRESSING_ID_SYSTEM_PROMPT, providerOptions: cache },
       {
-        role: "system",
-        content: PRESSING_ID_SYSTEM_PROMPT,
-        providerOptions: { anthropic: { cacheControl: { type: "ephemeral" as const } } },
+        role: "user",
+        content: buildPressingIdPrompt(master, filters, details.map(block).join("\n\n")),
+        ...(history.length ? { providerOptions: cache } : {}),
       },
-      { role: "user", content: buildPressingIdPrompt(master, filters, details.map(block).join("\n\n")) },
+      ...history,
     ],
   });
   return result.toTextStreamResponse();

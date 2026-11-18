@@ -36,6 +36,9 @@ import {
   Images,
   Barcode,
   Ban,
+  Send,
+  Undo2,
+  History,
 } from "lucide-react";
 import {
   MAX_DETAILS, MAX_IDENTIFY, normalizeRunout, runoutMatches, looksLikeBarcode, barcodeDigits, isFormatChip, type PressingDetail,
@@ -71,6 +74,75 @@ interface PressingFinderProps {
 
 const emptyFilters = (): Record<FilterKey, string[]> => ({ format: [], released: [], country: [], label: [] });
 
+type Turn =
+  | { role: "assistant"; content: string; ruled?: number[]; undone?: boolean; failed?: boolean }
+  | { role: "user"; content: string; standing: number[] };
+
+// Where you are in the finder, kept on this device so closing the app (or
+// switching tabs, which unmounts this) doesn't lose the album, the narrowing,
+// the loaded runouts or the conversation with the guide.
+export const FINDER_SAVE_KEY = "ln-pressing-finder";
+const SAVE_VERSION = 1;
+const SAVE_MAX_AGE = 30 * 24 * 3600 * 1000;
+interface Saved {
+  v: number;
+  at: number;
+  query: string;
+  master: MasterHit | null;
+  filters: Record<FilterKey, string[]>;
+  barcode: { code: string; versions: Version[] } | null;
+  data: VersionsData | null;
+  details: PressingDetail[];
+  runout: string;
+  ruledOut: number[];
+  thread: Turn[];
+  guideCtx: { ids: number[]; filters: string } | null;
+  reply: string;
+  adds: Record<number, AddState>;
+  /** A guide reply was still arriving when this was saved. */
+  streaming: boolean;
+}
+
+function readSaved(): Saved | null {
+  try {
+    const s = JSON.parse(localStorage.getItem(FINDER_SAVE_KEY) || "null") as Saved | null;
+    if (!s || s.v !== SAVE_VERSION || Date.now() - s.at > SAVE_MAX_AGE) return null;
+    return s;
+  } catch {
+    return null;
+  }
+}
+
+function writeSaved(s: Saved) {
+  try {
+    localStorage.setItem(FINDER_SAVE_KEY, JSON.stringify(s));
+  } catch {
+    // Full: the runouts can be loaded again; everything else is small.
+    try { localStorage.setItem(FINDER_SAVE_KEY, JSON.stringify({ ...s, details: [] })); } catch {}
+  }
+}
+
+/** The release ids on a reply's closing <ruled-out>…</ruled-out> line. */
+function parseRuledOut(text: string): number[] {
+  const m = text.match(/<ruled-out>([\s\S]*?)<\/ruled-out>/);
+  return m ? (m[1].match(/\d+/g) ?? []).map(Number) : [];
+}
+
+function sinceText(at: number): string {
+  const min = Math.round((Date.now() - at) / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} h ago`;
+  const d = Math.round(h / 24);
+  return d === 1 ? "yesterday" : `${d} days ago`;
+}
+
+/** The reply as shown: without the machine line, even half-streamed. */
+function visibleGuide(text: string): string {
+  return text.replace(/<ruled-out>[\s\S]*?(<\/ruled-out>|$)/, "").replace(/<[a-z-]*$/, "").trimEnd();
+}
+
 export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -88,9 +160,24 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const cancelDetails = useRef(false);
   const [runout, setRunout] = useState("");
 
-  const [guide, setGuide] = useState("");
+  // The guide is a conversation: Claude's guide, then what the person sees on
+  // their copy and Claude's replies, each of which may rule pressings out.
+  const [thread, setThread] = useState<Turn[]>([]);
+  // What the guide was written about — fixed for the whole conversation.
+  const [guideCtx, setGuideCtx] = useState<{ ids: number[]; filters: string } | null>(null);
   const [guideLoading, setGuideLoading] = useState(false);
+  const [reply, setReply] = useState("");
+  const [guideError, setGuideError] = useState<string | null>(null);
   const guideAbort = useRef<AbortController | null>(null);
+  const resetGuide = useCallback(() => {
+    guideAbort.current?.abort();
+    guideAbort.current = null; // so the aborted stream knows it was superseded
+    setGuideLoading(false);
+    setGuideError(null);
+    setThread([]);
+    setGuideCtx(null);
+    setReply("");
+  }, []);
 
   const [adds, setAdds] = useState<Record<number, AddState>>({});
   const [openNotes, setOpenNotes] = useState<Set<number>>(new Set());
@@ -101,6 +188,82 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   const [barcode, setBarcode] = useState<{ code: string; versions: Version[] } | null>(null);
   const [ruledOut, setRuledOut] = useState<Set<number>>(new Set());
   const [viewer, setViewer] = useState<{ id: number; image?: number } | null>(null);
+
+  /* ── 0. pick up where you left off ─────────────────────────────────── */
+
+  const [restored, setRestored] = useState(false);
+  const [resumedAt, setResumedAt] = useState<number | null>(null);
+  const skipScroll = useRef(false);
+  useEffect(() => {
+    const s = readSaved();
+    if (s) {
+      let thread = s.thread;
+      let reply = s.reply;
+      // Closed while a reply was arriving: that reply is lost. Put the
+      // question back in the box (or drop a half-written first guide).
+      if (s.streaming && thread[thread.length - 1]?.role === "assistant") {
+        thread = thread.slice(0, -1);
+        const asked = thread[thread.length - 1];
+        if (asked?.role === "user") {
+          thread = thread.slice(0, -1);
+          reply = reply || asked.content;
+        }
+      }
+      skipScroll.current = true;
+      setQuery(s.query);
+      setMaster(s.master);
+      setFilters(s.filters);
+      setBarcode(s.barcode);
+      setData(s.data);
+      setDetails(new Map(s.details.map((d) => [d.id, d])));
+      setRunout(s.runout);
+      setRuledOut(new Set(s.ruledOut));
+      setThread(thread);
+      setGuideCtx(thread.length ? s.guideCtx : null);
+      setReply(reply);
+      setAdds(Object.fromEntries(Object.entries(s.adds).filter(([, a]) => a !== "adding")));
+      if (s.master) setResumedAt(s.at);
+    }
+    setRestored(true);
+  }, []);
+
+  // The latest state, ready to write: debounced while it changes, and at once
+  // when the app goes to the background (a phone may kill it after that).
+  const snapshot = useRef<Saved | null>(null);
+  useEffect(() => {
+    if (!restored) return;
+    const keep = new Set((barcode?.versions ?? data?.versions ?? []).map((v) => v.id));
+    snapshot.current = {
+      v: SAVE_VERSION,
+      at: Date.now(),
+      query,
+      master,
+      filters,
+      barcode,
+      data,
+      details: Array.from(details.values()).filter((d) => keep.has(d.id)),
+      runout,
+      ruledOut: Array.from(ruledOut),
+      thread,
+      guideCtx,
+      reply,
+      adds,
+      streaming: guideLoading,
+    };
+    const t = setTimeout(() => snapshot.current && writeSaved(snapshot.current), 500);
+    return () => clearTimeout(t);
+  }, [restored, query, master, filters, barcode, data, details, runout, ruledOut, thread, guideCtx, reply, adds, guideLoading]);
+  useEffect(() => {
+    const flush = () => { if (snapshot.current) writeSaved(snapshot.current); };
+    const onHide = () => { if (document.visibilityState === "hidden") flush(); };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      flush(); // switching dashboard tab unmounts the finder
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, []);
 
   /* ── 1. find the album ──────────────────────────────────────────────── */
 
@@ -164,7 +327,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     setRuledOut(new Set());
     setFilters(emptyFilters());
     setRunout("");
-    setGuide("");
+    resetGuide();
     setHits(null);
   };
 
@@ -174,6 +337,8 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   // scroll that far, and the scroll stops partway.
   const scrollOnLoad = useRef(false);
   useEffect(() => {
+    // A restored album is not a fresh pick: don't yank the page down to it.
+    if (skipScroll.current) { skipScroll.current = false; return; }
     if (master) scrollOnLoad.current = true;
   }, [master]);
 
@@ -207,7 +372,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
   }, [master, filters, barcode]);
 
   const toggleFilter = (key: FilterKey, value: string) => {
-    setGuide("");
+    resetGuide();
     setFilters((f) => ({
       ...f,
       [key]: f[key].includes(value) ? f[key].filter((v) => v !== value) : [...f[key], value],
@@ -335,8 +500,9 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
       .finally(() => todo.forEach((id) => inFlight.current.delete(id)));
   }, []);
 
+  // Ruling out by eye keeps the conversation: the next reply tells Claude
+  // what is still standing.
   const setOut = useCallback((id: number, out: boolean) => {
-    setGuide("");
     setRuledOut((s) => {
       const n = new Set(s);
       if (out) n.add(id);
@@ -354,37 +520,89 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
     ...(ruledOut.size ? [`${ruledOut.size} ruled out from photos`] : []),
   ].join("; ");
 
-  const identify = async () => {
-    const ids = shown.map((v) => v.id).slice(0, MAX_IDENTIFY);
-    if (ids.length < 2) return;
+  const talk = async (history: Turn[], ctx: { ids: number[]; filters: string }) => {
     guideAbort.current?.abort();
     const ctrl = new AbortController();
     guideAbort.current = ctrl;
-    setGuide("");
+    const asked = history[history.length - 1];
+    const standing = asked?.role === "user" ? asked.standing : ctx.ids;
+    const put = (content: string, extra: Partial<Extract<Turn, { role: "assistant" }>> = {}) =>
+      setThread([...history, { role: "assistant", content, ...extra }]);
+    put("");
     setGuideLoading(true);
+    let text = "";
     try {
       const res = await fetch("/api/pressings/identify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, master: master?.title, filters: filterSummary }),
+        body: JSON.stringify({
+          ids: ctx.ids,
+          master: master?.title,
+          filters: ctx.filters,
+          history: history.length ? history.map((t) => (t.role === "user" ? { role: t.role, content: t.content, standing: t.standing } : { role: t.role, content: t.content })) : undefined,
+        }),
         signal: ctrl.signal,
       });
       if (!res.ok || !res.body) throw new Error((await res.json().catch(() => ({}))).error || "The guide failed");
       const reader = res.body.getReader();
       const dec = new TextDecoder();
-      let text = "";
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
         text += dec.decode(value, { stream: true });
-        setGuide(text);
+        put(text);
       }
-      if (!text.trim()) setGuide("_Claude returned nothing — try again._");
+      if (!text.trim()) throw new Error("Claude returned nothing — try again.");
+      // Apply what the reply rules out — only pressings that were standing,
+      // and never all of them (the prompt forbids it; this enforces it).
+      if (history.length) {
+        const ruled = parseRuledOut(text).filter((id) => standing.includes(id));
+        if (ruled.length && ruled.length < standing.length) {
+          setRuledOut((s) => { const n = new Set(s); ruled.forEach((id) => n.add(id)); return n; });
+          put(text, { ruled });
+        }
+      }
     } catch (e) {
-      if ((e as Error)?.name !== "AbortError") setGuide(`_${e instanceof Error ? e.message : "The guide failed"}_`);
+      if (guideAbort.current !== ctrl) return; // reset or replaced: leave the new state alone
+      const aborted = (e as Error)?.name === "AbortError";
+      if (aborted && text.trim()) return; // stopped partway: keep what came
+      if (history.length) {
+        // A failed follow-up: take the question back into the box to resend.
+        setThread(history.slice(0, -1));
+        if (asked?.role === "user") setReply(asked.content);
+        if (!aborted) setGuideError(e instanceof Error ? e.message : "The guide failed");
+      } else if (aborted) {
+        setThread([]);
+      } else {
+        put(`_${e instanceof Error ? e.message : "The guide failed"}_`, { failed: true });
+      }
     } finally {
-      setGuideLoading(false);
+      if (guideAbort.current === ctrl) setGuideLoading(false);
     }
+  };
+  const identify = () => {
+    const ctx = { ids: shown.map((v) => v.id).slice(0, MAX_IDENTIFY), filters: filterSummary };
+    if (ctx.ids.length < 2) return;
+    setGuideCtx(ctx);
+    setReply("");
+    setGuideError(null);
+    talk([], ctx);
+  };
+
+  const sendReply = () => {
+    const said = reply.trim();
+    if (!said || !guideCtx || guideLoading) return;
+    const standing = shown.map((v) => v.id).filter((id) => guideCtx.ids.includes(id));
+    setReply("");
+    setGuideError(null);
+    talk([...thread, { role: "user", content: said, standing }], guideCtx);
+  };
+
+  const undoRuling = (i: number) => {
+    const t = thread[i];
+    if (t.role !== "assistant" || !t.ruled) return;
+    setRuledOut((s) => { const n = new Set(s); t.ruled!.forEach((id) => n.delete(id)); return n; });
+    setThread((th) => th.map((x, j) => (j === i ? { ...x, undone: true } : x)));
   };
 
   /* ── add to collection ─────────────────────────────────────────────── */
@@ -430,6 +648,27 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
         <span className="ml-1">{st === "error" ? "Retry" : "Add"}</span>
       </Button>
     );
+  };
+
+  // [UK 1st](#r-123) → a chip that scrolls to that pressing, with Add.
+  const guideMarkdown = {
+    a: ({ href, children }: { href?: string; children?: React.ReactNode }) => {
+      const m = href?.match(/^#r-(\d+)$/);
+      if (!m) return <a href={href} target="_blank" rel="noreferrer">{children}</a>;
+      const id = Number(m[1]);
+      const out = ruledOut.has(id);
+      return (
+        <span className="inline-flex items-center gap-1.5 align-baseline">
+          <button
+            className={`font-medium underline underline-offset-2 ${out ? "text-muted-foreground line-through decoration-muted-foreground/50" : "text-primary decoration-primary/30"}`}
+            onClick={() => document.getElementById(`pressing-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+          >
+            {children}
+          </button>
+          {!out && <AddButton id={id} compact />}
+        </span>
+      );
+    },
   };
 
   /* ── render ────────────────────────────────────────────────────────── */
@@ -556,11 +795,17 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => { setMaster(null); setData(null); setGuide(""); setBarcode(null); setRuledOut(new Set()); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setMaster(null); setData(null); resetGuide(); setBarcode(null); setRuledOut(new Set()); setRunout(""); setFilters(emptyFilters()); setResumedAt(null); }}>
             Change
           </Button>
         </CardContent>
       </Card>
+      {resumedAt && (
+        <p className="text-xs text-muted-foreground px-1 -mt-1 flex items-center gap-1.5">
+          <History className="w-3.5 h-3.5" /> Picked up where you left off · {sinceText(resumedAt)}
+          <button className="ml-auto text-primary font-medium" onClick={() => setResumedAt(null)}>OK</button>
+        </p>
+      )}
 
       {/* Narrowed by barcode: the facets would only offer what the code already decided */}
       {barcode && (
@@ -574,7 +819,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
               </div>
               <div className="text-muted-foreground text-xs">Only the releases that print this code. Narrow further below.</div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(emptyFilters()); setRuledOut(new Set()); setGuide(""); }}>
+            <Button variant="ghost" size="sm" onClick={() => { setBarcode(null); setFilters(emptyFilters()); setRuledOut(new Set()); resetGuide(); }}>
               All versions
             </Button>
           </CardContent>
@@ -626,7 +871,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
             );
           })}
           {filterSummary && (
-            <button className="text-sm text-primary font-medium" onClick={() => { setFilters(emptyFilters()); setRunout(""); setGuide(""); }}>
+            <button className="text-sm text-primary font-medium" onClick={() => { setFilters(emptyFilters()); setRunout(""); resetGuide(); }}>
               Clear all filters
             </button>
           )}
@@ -678,7 +923,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
           ) : (
             <input
               value={runout}
-              onChange={(e) => { setRunout(e.target.value); setGuide(""); }}
+              onChange={(e) => { setRunout(e.target.value); resetGuide(); }}
               placeholder="e.g. XEX 709-1   (spacing and dashes don't matter)"
               autoCapitalize="characters"
               autoCorrect="off"
@@ -689,17 +934,17 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
         </CardContent>
       </Card>
 
-      {/* Tell them apart */}
-      {allLoaded && shown.length >= 2 && (
+      {/* Tell them apart — and then talk it through */}
+      {allLoaded && (shown.length >= 2 || thread.length > 0) && (
         <Card className="border-primary/30">
           <CardContent className="p-3 sm:p-4 space-y-3">
-            {!guide && !guideLoading && (
+            {thread.length === 0 && (
               <Button onClick={identify} className="w-full">
                 <Sparkles className="w-4 h-4 mr-2" />
                 How do I tell {shown.length > MAX_IDENTIFY ? `the first ${MAX_IDENTIFY}` : `these ${shown.length}`} apart?
               </Button>
             )}
-            {(guide || guideLoading) && (
+            {thread.length > 0 && (
               <>
                 <div className="flex items-center justify-between">
                   <div className="font-display text-lg font-semibold flex items-center gap-2">
@@ -710,39 +955,66 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
                       <Square className="w-3 h-3 mr-1" /> Stop
                     </Button>
                   ) : (
-                    <Button variant="ghost" size="sm" onClick={identify}>Again</Button>
+                    <Button variant="ghost" size="sm" onClick={identify} disabled={shown.length < 2}>Start over</Button>
                   )}
                 </div>
-                {guideLoading && !guide && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Reading every runout and note…
-                  </p>
-                )}
-                <div className="md-guide text-sm">
-                  <ReactMarkdown
-                    components={{
-                      // [UK 1st](#r-123) → a chip that adds that pressing.
-                      a: ({ href, children }) => {
-                        const m = href?.match(/^#r-(\d+)$/);
-                        if (!m) return <a href={href} target="_blank" rel="noreferrer">{children}</a>;
-                        const id = Number(m[1]);
-                        return (
-                          <span className="inline-flex items-center gap-1.5 align-baseline">
-                            <button
-                              className="font-medium text-primary underline decoration-primary/30 underline-offset-2"
-                              onClick={() => document.getElementById(`pressing-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                            >
-                              {children}
+                {thread.map((t, i) =>
+                  t.role === "user" ? (
+                    <div key={i} className="flex justify-end">
+                      <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-3.5 py-2 text-sm whitespace-pre-wrap">{t.content}</p>
+                    </div>
+                  ) : (
+                    <div key={i} className={i > 0 ? "border-l-2 border-primary/30 pl-3" : ""}>
+                      {guideLoading && i === thread.length - 1 && !visibleGuide(t.content) && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" /> {i === 0 ? "Reading every runout and note…" : "Checking that against every pressing…"}
+                        </p>
+                      )}
+                      <div className="md-guide text-sm">
+                        <ReactMarkdown components={guideMarkdown}>{visibleGuide(t.content)}</ReactMarkdown>
+                      </div>
+                      {t.ruled && (
+                        <p className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
+                          <Ban className="w-3.5 h-3.5" />
+                          {t.undone ? `Brought back ${t.ruled.length}` : `Ruled out ${t.ruled.length}`}
+                          {!t.undone && (
+                            <button className="text-primary font-medium inline-flex items-center gap-1" onClick={() => undoRuling(i)}>
+                              <Undo2 className="w-3 h-3" /> Undo
                             </button>
-                            <AddButton id={id} compact />
-                          </span>
-                        );
-                      },
-                    }}
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
+                {guideError && <p className="text-sm text-destructive">{guideError}</p>}
+                {!(thread[0]?.role === "assistant" && thread[0].failed) && (
+                  <form
+                    className="space-y-1.5 pt-1"
+                    onSubmit={(e) => { e.preventDefault(); sendReply(); }}
                   >
-                    {guide}
-                  </ReactMarkdown>
-                </div>
+                    <label htmlFor="guide-reply" className="text-xs font-medium text-muted-foreground">
+                      {shown.length === 1 ? "One left. Anything that doesn't match?" : "What do you see on your copy?"}
+                    </label>
+                    <div className="flex gap-2 items-end">
+                      <textarea
+                        id="guide-reply"
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); sendReply(); }
+                        }}
+                        rows={1}
+                        maxLength={1000}
+                        placeholder="e.g. red labels · sans serif on both sides · KT embossed near the spindle hole"
+                        className="flex-1 min-h-[2.5rem] max-h-32 resize-none px-3 py-2 text-sm rounded-md border border-input bg-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      />
+                      <Button type="submit" size="icon" disabled={!reply.trim() || guideLoading} aria-label="Send">
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </>
             )}
           </CardContent>
@@ -760,7 +1032,7 @@ export function PressingFinder({ ownedReleaseIds }: PressingFinderProps) {
         <p className="text-sm text-muted-foreground px-1 flex items-center gap-2">
           <Ban className="w-3.5 h-3.5" />
           {ruledOut.size} ruled out by eye
-          <button className="text-primary font-medium" onClick={() => { setRuledOut(new Set()); setGuide(""); }}>
+          <button className="text-primary font-medium" onClick={() => { setRuledOut(new Set()); setThread((t) => t.map((x) => (x.role === "assistant" && x.ruled ? { ...x, undone: true } : x))); }}>
             Bring them back
           </button>
         </p>

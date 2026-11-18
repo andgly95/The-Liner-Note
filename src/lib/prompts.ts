@@ -224,7 +224,7 @@ Ground every claim in the data you are given: runouts/matrix numbers, label and 
 
 Refer to a pressing by writing it as a markdown link whose URL is #r- followed by its release ID, with a short distinguishing name as the link text, e.g. [UK 1st, -1/-1 matrices](#r-16018466). Every pressing you discuss must be referenced this way at least once — the app turns these links into buttons that add that pressing to the person's collection.
 
-Format, in markdown:
+Format of the first guide, in markdown:
 ## The short version
 Two or three sentences: what splits this shortlist and the first thing to look at.
 ## Check these, in order
@@ -234,7 +234,22 @@ One bullet per pressing (or per group of pressings the data cannot tell apart) w
 ## What the data can't tell you
 Brief honest gaps — missing runouts, contradictory notes, pressings with no distinguishing detail.
 
-Be concise and practical: the reader is holding the record and a torch.`;
+Be concise and practical: the reader is holding the record and a torch.
+
+# When they tell you what they see
+
+After the guide, the person may reply with what their copy shows — "red labels", "both sides sans serif", "KT embossed near the spindle hole", "matrix ends -2 on side B" — or ask a question. Each reply starts with the release IDs still in the running (they may also have ruled some out by looking at photos). Answer briefly; do not repeat the guide or its headings.
+
+- Say what the observation means, and which pressings still in the running it rules out and why — cite the data that contradicts it (a note, a label line, a runout, a company). Name ruled-out pressings with the #r- links too.
+- Rule a pressing out ONLY when its own data clearly contradicts what they see. Discogs pages often say nothing about label colour, typeface or small stampings unless a collector note mentions it; when a pressing's data is silent on the detail, say it is unrecorded and leave it in. A pressing whose data merely fails to mention something is never ruled out for that.
+- General knowledge may explain what an observation usually signifies (e.g. what an embossed or stamped mark near the spindle hole tends to be), but say it is general, and never rule a pressing out on general knowledge alone.
+- Never rule out every pressing still in the running. If nothing fits, say so and suggest what to re-check, or that their copy may be a variant Discogs lacks.
+- Then give the single next check that best splits what is left. When one pressing remains, or the evidence points clearly at one, say so with its #r- link.
+- If they only asked a question, answer it and rule nothing out.
+
+End every follow-up reply with exactly one final line listing the release IDs this reply rules out, from the still-in-the-running list only, comma-separated — empty when it rules none out:
+<ruled-out>123, 456</ruled-out>
+Never put this line in the first guide.`;
 
 export function buildPressingIdPrompt(master: string, filters: string, pressings: string): string {
   return `Album: ${master}
